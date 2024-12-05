@@ -1,14 +1,16 @@
 using UnityEditor;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 /// <summary> Basic elevator, that can move vertically <summary>
 public class Elevator : MonoBehaviour
 {
     private float _position => gameObject.transform.position.y;
+    [SerializeField]
     private float _speed = 40f;
     private Rigidbody _rb;
 
-    private static ElevatorDriveDirection _driveDirection = ElevatorDriveDirection.DOWN;
+    protected static ElevatorDriveDirection _driveDirection = ElevatorDriveDirection.STOP;
     private static Vector3 _driveDirectionVector => DirEnumToVector(_driveDirection);
 
     private static Vector3 DirEnumToVector(ElevatorDriveDirection dirEnum) =>
@@ -21,10 +23,9 @@ public class Elevator : MonoBehaviour
         };
 
 
-    private bool Init()
+    protected virtual bool Init()
     {
-        if (!_rb)
-            _rb = GetComponent<Rigidbody>() ?? GetComponentInChildren<Rigidbody>();
+        _rb ??= GetComponent<Rigidbody>() ?? GetComponentInChildren<Rigidbody>();
 
         return _rb;
     }
@@ -39,33 +40,31 @@ public class Elevator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.W))
         {
             _driveDirection = ElevatorDriveDirection.UP;
+            print(_driveDirection);
         }
         if (Input.GetKeyDown(KeyCode.S))
         {
             _driveDirection = ElevatorDriveDirection.DOWN;
+            print(_driveDirection);
         }
         if (Input.GetKeyDown(KeyCode.Space))
         {
             _driveDirection = ElevatorDriveDirection.STOP;
+            print(_driveDirection);
         }
     }
 
-    private void FixedUpdate()
+    protected virtual void FixedUpdate()
     {
         MoveBody(_driveDirection);
     }
 
-    private void MoveBody(ElevatorDriveDirection dir)
+    protected void MoveBody(ElevatorDriveDirection dir)
     {
         if (!_rb)
             Init();
 
         _rb.linearVelocity = DirEnumToVector(dir) * _speed * Time.fixedDeltaTime;
-    }
-
-    private void OnTriggerEnter(Collider c)
-    {
-        print($"Elevator {this.name} on the {c.gameObject.name}");
     }
 
     [DrawGizmo(GizmoType.Selected | GizmoType.Active)]
