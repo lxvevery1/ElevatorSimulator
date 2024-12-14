@@ -28,20 +28,35 @@ public class SensorableElevator : Elevator
         }
     }
 
-    private void OnFloorDetect(Tuple<float, float> floor)
+    private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
     {
-        print($"Elevator get floor id = <b>{floor.Item1}</b> from sensor");
+        print($"Elevator get floor id = <b>{floors.Item1.Item1}</b> and {floors.Item1.Item2} from sensor");
         switch (_driveDirection)
         {
             case ElevatorDriveDirection.UP:
-                _currFloor = floor.Item1;
+                _currFloor = floors.Item1.Item2;
                 break;
             case ElevatorDriveDirection.DOWN:
-                _currFloor = floor.Item2;
+                _currFloor = floors.Item1.Item1;
                 break;
             default:
-                _currFloor = floor.Item1;
+                _currFloor = floors.Item1.Item2;
                 break;
+        }
+
+        // Put this if you want strange initialization
+        if (!_sensorsInited)
+        {
+            if (_initDriveDirection == ElevatorDriveDirection.DOWN &&
+                    floors.Item2)
+            {
+                ReverseElevatorDirection();
+            }
+            else if (_initDriveDirection == ElevatorDriveDirection.UP &&
+                    floors.Item2)
+            {
+                ReverseElevatorDirection();
+            }
         }
 
         if (_sensorsInited && _driveDirection != ElevatorDriveDirection.STOP)
@@ -50,7 +65,7 @@ public class SensorableElevator : Elevator
             print("Elevator stopped after reaching the init floor.");
             print("Sensors initialized");
 
-            MoveToFloor(3);
+            MoveToFloor(1);
         }
     }
 
@@ -65,7 +80,8 @@ public class SensorableElevator : Elevator
             return;
         }
 
-        var targetDirection = floorId > _currFloor ? ElevatorDriveDirection.UP :
+        var targetDirection = floorId > _currFloor ?
+            ElevatorDriveDirection.UP :
             ElevatorDriveDirection.DOWN;
 
         if (floorId == _currFloor)

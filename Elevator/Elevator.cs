@@ -67,9 +67,24 @@ public class Elevator : MonoBehaviour
         _rb.linearVelocity = DirEnumToVector(dir) * _speed * Time.fixedDeltaTime;
     }
 
+    /// <summary>
+    /// Changes elevator drive direction from up to down and from down to up
+    /// </summary>
+    protected void ReverseElevatorDirection()
+    {
+        if (_driveDirection == ElevatorDriveDirection.STOP)
+            return;
+
+        _driveDirection = (_driveDirection == ElevatorDriveDirection.UP) ?
+            ElevatorDriveDirection.DOWN :
+            ElevatorDriveDirection.UP;
+    }
+
+
     [DrawGizmo(GizmoType.Selected | GizmoType.Active)]
     private static void DrawDirectionVectorGizmo(Elevator elevator, GizmoType gizmoType)
     {
         Gizmos.DrawLine(elevator.transform.position, _driveDirectionVector);
     }
+
 }

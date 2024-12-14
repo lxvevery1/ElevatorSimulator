@@ -26,7 +26,7 @@ public enum ElevatorState
     SearchFloorUpSlow,
 
     // When sensor says you move to the limit (-1 floor or > max) ->
-    ChangeSeacrhingDirection,
+    ChangeSearchingDirection,
 
     // When elevator reads it floor from sensor
     // -> IDLE
@@ -54,16 +54,16 @@ public enum ElevatorState
     // reset signal of moving with some delay
     StopWaiting,
 
-    // Elevator won't stop in couple floors
+    // Elevator won't stop at next floor
     MovingDownFast,
 
-    // Elevator will stop in couple floors
+    // Elevator will stop at next floor
     MovingDownSlow,
 
-    // Elevator moving to up floors, won't stop in couple floors
+    // Elevator moving UP, won't stop at next floor
     MovingUpFast,
 
-    // Elevator moving to up floors, will stop in couple floors
+    // Elevator moving UP, will stop at next floor
     MovingUpSlow,
 }
 

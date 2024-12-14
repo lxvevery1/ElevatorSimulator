@@ -4,7 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(MeshCollider))]
 public class FloorSensor : MonoBehaviour
 {
-    public Action<int> OnFloorDetectAction;
+    public Action<Floor> OnFloorDetectAction;
 
 
     private string FLOOR_TAG = "Floor";
@@ -24,7 +24,7 @@ public class FloorSensor : MonoBehaviour
         if (c.gameObject.CompareTag(FLOOR_TAG))
         {
             var floor = c.gameObject.GetComponent<Floor>();
-            OnFloorDetectAction?.Invoke(floor.FloorId);
+            OnFloorDetectAction?.Invoke(floor);
             print($"{this.name} detect {c.gameObject.name}");
         }
     }

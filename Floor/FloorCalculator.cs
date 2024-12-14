@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class FloorCalculator : MonoBehaviour
 {
-    public Action<Tuple<float, float>> OnFloorDetectAction;
+    public Action<Tuple<Tuple<float, float>, bool>> OnFloorDetectAction;
 
 
     private float _calculatedFloorUP = -1;
@@ -32,20 +32,22 @@ public class FloorCalculator : MonoBehaviour
         }
     }
 
-    private void OnFloorDetect(int floorId)
+    private void OnFloorDetect(Floor floor)
     {
-        if (floorId > 0 && _lastFloorDetected > 0)
+        if (floor.FloorId > 0 && _lastFloorDetected > 0)
         {
             Tuple<float, float> topBottomFloors = new Tuple<float, float>
-                (floorId, _lastFloorDetected);
+                (floor.FloorId, _lastFloorDetected);
             _calculatedFloorUP = DetectCurrentFloorUP(topBottomFloors);
             _calculatedFloorDOWN = DetectCurrentFloorDOWN(topBottomFloors);
         }
-        _lastFloorDetected = floorId;
+        _lastFloorDetected = floor.FloorId;
 
         OnFloorDetectAction?.Invoke(
-                new Tuple<float, float>(_calculatedFloorUP, _calculatedFloorDOWN));
-        print($"{this.name} current floor -> {floorId}");
+                new Tuple<Tuple<float, float>, bool>
+                (new Tuple<float, float>(_calculatedFloorDOWN, _calculatedFloorUP),
+                 floor.IsLimit));
+        print($"{this.name} current floor -> {floor.FloorId}");
     }
 
     private float DetectCurrentFloorUP(Tuple<float, float> floorPair) =>
