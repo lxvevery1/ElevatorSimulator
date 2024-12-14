@@ -36,10 +36,10 @@ public class FloorCalculator : MonoBehaviour
     {
         if (floorId > 0 && _lastFloorDetected > 0)
         {
-            _calculatedFloorUP = DetectCurrentFloorUP(new Tuple<float, float>
-                    (floorId, _lastFloorDetected));
-            _calculatedFloorDOWN = DetectCurrentFloorDOWN(new Tuple<float, float>
-                    (floorId, _lastFloorDetected));
+            Tuple<float, float> topBottomFloors = new Tuple<float, float>
+                (floorId, _lastFloorDetected);
+            _calculatedFloorUP = DetectCurrentFloorUP(topBottomFloors);
+            _calculatedFloorDOWN = DetectCurrentFloorDOWN(topBottomFloors);
         }
         _lastFloorDetected = floorId;
 

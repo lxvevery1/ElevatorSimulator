@@ -43,14 +43,6 @@ public class SensorableElevator : Elevator
                 _currFloor = floor.Item1;
                 break;
         }
-        if (_driveDirection == ElevatorDriveDirection.UP)
-        {
-            _currFloor = floor.Item1;
-        }
-        else if (_driveDirection == ElevatorDriveDirection.DOWN)
-        {
-            _currFloor = floor.Item2;
-        }
 
         if (_sensorsInited && _driveDirection != ElevatorDriveDirection.STOP)
         {
