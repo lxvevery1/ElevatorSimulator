@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class SensorableElevator : Elevator
@@ -6,6 +7,8 @@ public class SensorableElevator : Elevator
     private FloorCalculator _floorCalc;
     private float _currFloor;
     private bool _sensorsInited => _currFloor > 0;
+    [SerializeField]
+    private ElevatorDriveDirection _initDriveDirection;
 
 
     protected override bool Init()
@@ -21,14 +24,33 @@ public class SensorableElevator : Elevator
         if (!_sensorsInited)
         {
             print("Starting initialization for sensors");
-            _driveDirection = ElevatorDriveDirection.UP;
+            _driveDirection = _initDriveDirection;
         }
     }
 
-    private void OnFloorDetect(float floorId)
+    private void OnFloorDetect(Tuple<float, float> floor)
     {
-        print($"Elevator get floor id = <b>{floorId}</b> from sensor");
-        _currFloor = floorId;
+        print($"Elevator get floor id = <b>{floor.Item1}</b> from sensor");
+        switch (_driveDirection)
+        {
+            case ElevatorDriveDirection.UP:
+                _currFloor = floor.Item1;
+                break;
+            case ElevatorDriveDirection.DOWN:
+                _currFloor = floor.Item2;
+                break;
+            default:
+                _currFloor = floor.Item1;
+                break;
+        }
+        if (_driveDirection == ElevatorDriveDirection.UP)
+        {
+            _currFloor = floor.Item1;
+        }
+        else if (_driveDirection == ElevatorDriveDirection.DOWN)
+        {
+            _currFloor = floor.Item2;
+        }
 
         if (_sensorsInited && _driveDirection != ElevatorDriveDirection.STOP)
         {
@@ -40,8 +62,17 @@ public class SensorableElevator : Elevator
         }
     }
 
+    /// <summary>
+    /// Move elevator to target floor
+    /// <param name="floorId"> id of floor: 1, 2, 3, 4, ...
+    /// </summary>
     protected void MoveToFloor(int floorId)
     {
+        if (floorId <= 0)
+        {
+            return;
+        }
+
         var targetDirection = floorId > _currFloor ? ElevatorDriveDirection.UP :
             ElevatorDriveDirection.DOWN;
 

@@ -4,17 +4,18 @@ using UnityEngine;
 
 public class FloorCalculator : MonoBehaviour
 {
-    public Action<float> OnFloorDetectAction;
+    public Action<Tuple<float, float>> OnFloorDetectAction;
 
 
-    private float _calculatedFloor = -1;
+    private float _calculatedFloorUP = -1;
+    private float _calculatedFloorDOWN = -1;
     private int _lastFloorDetected = -1;
     [SerializeField]
     private FloorSensor _floorBottom;
     [SerializeField]
     private FloorSensor _floorTop;
 
-    private List<FloorSensor> _floorSensors = new List<FloorSensor>();
+    private List<FloorSensor> _floorSensors = new List<FloorSensor>(2);
 
 
     private void Awake() => Init();
@@ -33,14 +34,22 @@ public class FloorCalculator : MonoBehaviour
 
     private void OnFloorDetect(int floorId)
     {
-        _calculatedFloor = DetectCurrentFloor(new Tuple<float, float>
-                (floorId, _lastFloorDetected));
+        if (floorId > 0 && _lastFloorDetected > 0)
+        {
+            _calculatedFloorUP = DetectCurrentFloorUP(new Tuple<float, float>
+                    (floorId, _lastFloorDetected));
+            _calculatedFloorDOWN = DetectCurrentFloorDOWN(new Tuple<float, float>
+                    (floorId, _lastFloorDetected));
+        }
         _lastFloorDetected = floorId;
 
-        OnFloorDetectAction?.Invoke(_calculatedFloor);
+        OnFloorDetectAction?.Invoke(
+                new Tuple<float, float>(_calculatedFloorUP, _calculatedFloorDOWN));
         print($"{this.name} current floor -> {floorId}");
     }
 
-    private float DetectCurrentFloor(Tuple<float, float> floorPair) =>
+    private float DetectCurrentFloorUP(Tuple<float, float> floorPair) =>
         (floorPair.Item1 + floorPair.Item2) * 0.5f;
+    private float DetectCurrentFloorDOWN(Tuple<float, float> floorPair) =>
+        (floorPair.Item1 + floorPair.Item2) * 0.5f - 0.5f;
 }

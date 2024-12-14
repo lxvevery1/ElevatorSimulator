@@ -8,7 +8,7 @@ public class FloorSensor : MonoBehaviour
 
 
     private string FLOOR_TAG = "Floor";
-    private int _floor;
+    private int _floor = -1;
     private MeshCollider _meshCollider;
 
     private void Awake()
