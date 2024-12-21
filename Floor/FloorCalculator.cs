@@ -5,6 +5,7 @@ using UnityEngine;
 public class FloorCalculator : MonoBehaviour
 {
     public Action<Tuple<Tuple<float, float>, bool>> OnFloorDetectAction;
+    public Action<float> OnApproachFloorDetectAction;
 
 
     private float _calculatedFloorUP = -1;
@@ -29,7 +30,14 @@ public class FloorCalculator : MonoBehaviour
         foreach (var sensor in _floorSensors)
         {
             sensor.OnFloorDetectAction += OnFloorDetect;
+            sensor.OnApproachFloorDetectAction += OnApproachFloorDetect;
         }
+    }
+
+    private void OnApproachFloorDetect(Floor floor)
+    {
+        OnApproachFloorDetectAction.Invoke(floor.FloorId);
+        print($"{this.name} approaching floor -> {floor.FloorId}");
     }
 
     private void OnFloorDetect(Floor floor)

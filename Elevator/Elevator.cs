@@ -2,14 +2,15 @@ using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(ElevatorEngine))]
 /// <summary> Basic elevator, that can move vertically <summary>
 public class Elevator : MonoBehaviour
 {
     private float _position => gameObject.transform.position.y;
     [SerializeField]
-    private float _speed = 40f;
     private Rigidbody _rb;
 
+    protected ElevatorEngine _elevatorEngine;
     protected static ElevatorDriveDirection _driveDirection = ElevatorDriveDirection.STOP;
     private static Vector3 _driveDirectionVector => DirEnumToVector(_driveDirection);
 
@@ -25,9 +26,14 @@ public class Elevator : MonoBehaviour
 
     protected virtual bool Init()
     {
-        _rb ??= GetComponent<Rigidbody>() ?? GetComponentInChildren<Rigidbody>();
+        bool inited = false;
 
-        return _rb;
+        _rb ??= GetComponent<Rigidbody>();
+        _elevatorEngine ??= GetComponent<ElevatorEngine>();
+
+
+        inited = _elevatorEngine && _rb;
+        return inited;
     }
 
     private void Awake()
@@ -64,7 +70,7 @@ public class Elevator : MonoBehaviour
         if (!_rb)
             Init();
 
-        _rb.linearVelocity = DirEnumToVector(dir) * _speed * Time.fixedDeltaTime;
+        _rb.linearVelocity = DirEnumToVector(dir) * _elevatorEngine.Speed * Time.fixedDeltaTime;
     }
 
     /// <summary>
@@ -86,5 +92,4 @@ public class Elevator : MonoBehaviour
     {
         Gizmos.DrawLine(elevator.transform.position, _driveDirectionVector);
     }
-
 }

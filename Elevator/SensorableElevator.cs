@@ -10,14 +10,29 @@ public class SensorableElevator : Elevator
     [SerializeField]
     private ElevatorDriveDirection _initDriveDirection;
 
+    [SerializeField]
+    private int _targetFloor = 1;
+    private Action<float> _onApproachFloorDetectAction;
+
 
     protected override bool Init()
     {
         _floorCalc.OnFloorDetectAction += OnFloorDetect;
+        _floorCalc.OnApproachFloorDetectAction += OnApproachFloorDetect;
         InitSensors();
         return base.Init();
     }
 
+    private void OnApproachFloorDetect(float approachFloor)
+    {
+        if (approachFloor < 1)
+            return;
+
+        if (approachFloor == _targetFloor)
+        {
+            _elevatorEngine.SetMode(ElevatorDriveDynamic.SLOWDOWN);
+        }
+    }
 
     private void InitSensors()
     {
@@ -65,7 +80,7 @@ public class SensorableElevator : Elevator
             print("Elevator stopped after reaching the init floor.");
             print("Sensors initialized");
 
-            MoveToFloor(1);
+            MoveToFloor(_targetFloor);
         }
     }
 
@@ -84,9 +99,12 @@ public class SensorableElevator : Elevator
             ElevatorDriveDirection.UP :
             ElevatorDriveDirection.DOWN;
 
+        _elevatorEngine.SetMode(ElevatorDriveDynamic.ACCELERATION);
+
         if (floorId == _currFloor)
         {
             targetDirection = ElevatorDriveDirection.STOP;
+            _elevatorEngine.SetMode(ElevatorDriveDynamic.STABLE);
         }
 
         _driveDirection = targetDirection;
