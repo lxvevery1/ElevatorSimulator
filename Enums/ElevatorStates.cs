@@ -81,6 +81,13 @@ public enum ElevatorDriveDynamic
     SLOWDOWN
 }
 
+public enum ElevatorAcceleration
+{
+    ZERO,
+    MAX,
+    MIN
+}
+
 public enum ElevatorDoor
 {
     CLOSED,

@@ -13,6 +13,7 @@ public class SensorableElevator : Elevator
     [SerializeField]
     private int _targetFloor = 1;
     private Action<float> _onApproachFloorDetectAction;
+    private bool _isApproaching = false;
 
 
     protected override bool Init()
@@ -30,7 +31,8 @@ public class SensorableElevator : Elevator
 
         if (approachFloor == _targetFloor)
         {
-            _elevatorEngine.SetMode(ElevatorDriveDynamic.SLOWDOWN);
+            _isApproaching = true;
+            _elevatorEngine.Acceleration = ElevatorAcceleration.MIN;
         }
     }
 
@@ -99,12 +101,16 @@ public class SensorableElevator : Elevator
             ElevatorDriveDirection.UP :
             ElevatorDriveDirection.DOWN;
 
-        _elevatorEngine.SetMode(ElevatorDriveDynamic.ACCELERATION);
+        if (!_isApproaching)
+        {
+            _elevatorEngine.Acceleration = ElevatorAcceleration.MAX;
+        }
 
         if (floorId == _currFloor)
         {
             targetDirection = ElevatorDriveDirection.STOP;
-            _elevatorEngine.SetMode(ElevatorDriveDynamic.STABLE);
+            _elevatorEngine.Acceleration = ElevatorAcceleration.ZERO;
+            _isApproaching = false;
         }
 
         _driveDirection = targetDirection;

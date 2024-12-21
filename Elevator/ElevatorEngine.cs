@@ -7,48 +7,64 @@ using UnityEngine;
 public class ElevatorEngine : MonoBehaviour
 {
     public float Speed = 0f;
-
+    public ElevatorAcceleration Acceleration
+    {
+        get => _acceleration;
+        set => _acceleration = value;
+    }
 
     [SerializeField]
-    private float _maxSpeed = 200f;
+    private float _acceleratedSpeed = 200f;
     [SerializeField]
-    private float _minSpeed = 80f;
-    private float _defaultSpeed => (_maxSpeed + _minSpeed) / 2;
-    private float _accelerationTime = 1.3f;
+    private float _approachingSpeed = 80f;
+    private float _accelerationTime = 2.3f;
 
     private ElevatorDriveDynamic _driveDynamic = ElevatorDriveDynamic.STABLE;
-
-
-    public void SetMode(ElevatorDriveDynamic driveMode)
-    {
-        _driveDynamic = driveMode;
-    }
+    private ElevatorAcceleration _acceleration = ElevatorAcceleration.ZERO;
 
 
     private void Update()
     {
-        switch (_driveDynamic)
+        SpeedRegulation();
+    }
+
+    private void SpeedRegulation()
+    {
+        switch (_acceleration)
         {
-            case ElevatorDriveDynamic.STABLE:
+            case ElevatorAcceleration.ZERO:
+                _driveDynamic = ElevatorDriveDynamic.STABLE;
                 // Keep the speed at the default value
-                Speed = _defaultSpeed;
+                Speed = _approachingSpeed;
                 break;
 
-            case ElevatorDriveDynamic.ACCELERATION:
+            case ElevatorAcceleration.MAX:
                 // Gradually increase the speed to max speed
-                if (Speed < _maxSpeed)
+                if (Speed < _acceleratedSpeed)
                 {
-                    Speed += (_maxSpeed - _defaultSpeed) * Time.deltaTime / _accelerationTime;
-                    Speed = Mathf.Min(Speed, _maxSpeed); // Clamp speed to max speed
+                    _driveDynamic = ElevatorDriveDynamic.ACCELERATION;
+                    Speed += (_acceleratedSpeed - _approachingSpeed) *
+                        Time.deltaTime / _accelerationTime;
+                }
+                else
+                {
+                    _driveDynamic = ElevatorDriveDynamic.STABLE;
+                    Speed = Mathf.Min(Speed, _acceleratedSpeed); // Clamp speed to max speed
                 }
                 break;
 
-            case ElevatorDriveDynamic.SLOWDOWN:
+            case ElevatorAcceleration.MIN:
                 // Gradually decrease the speed to min speed
-                if (Speed > _minSpeed)
+                if (Speed > _approachingSpeed)
                 {
-                    Speed -= (_defaultSpeed - _minSpeed) * Time.deltaTime / _accelerationTime;
-                    Speed = Mathf.Max(Speed, _minSpeed); // Clamp speed to min speed
+                    _driveDynamic = ElevatorDriveDynamic.SLOWDOWN;
+                    Speed -= (_acceleratedSpeed - _approachingSpeed) *
+                        Time.deltaTime / _accelerationTime;
+                }
+                else
+                {
+                    _driveDynamic = ElevatorDriveDynamic.STABLE;
+                    Speed = Mathf.Max(Speed, _approachingSpeed); // Clamp speed to min speed
                 }
                 break;
         }
