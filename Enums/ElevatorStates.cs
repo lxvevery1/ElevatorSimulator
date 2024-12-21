@@ -45,6 +45,7 @@ public enum ElevatorState
     // -> DOOR CLOSE
     DoorOpening,
 
+    // Wait for people to enter elevator i think
     WaitingForPeople,
 
     // Close doors before making move
