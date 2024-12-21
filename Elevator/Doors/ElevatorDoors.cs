@@ -4,29 +4,39 @@ using System.Collections.Generic;
 
 public class ElevatorDoors : MonoBehaviour, IElevatorDoors
 {
+    public ElevatorDoor DoorState;
+    public bool IsOpened => _isOpened;
+
     private const int DOOR_COUNT = 2;
     [SerializeField]
     private List<GameObject> _doorsGO = new(DOOR_COUNT);
     private float _openedXOffset = 0.65f;
     private float _targetX;
     private float _animationDuration = 2.0f;
+    private bool _isOpened = false;
+
 
 
     public void DoOpen()
     {
+        DoorState = ElevatorDoor.OPENING;
         _targetX = _openedXOffset;
-        StartCoroutine(HorizontalPositionChange(_doorsGO[0], -_targetX));
-        StartCoroutine(HorizontalPositionChange(_doorsGO[1], _targetX));
+        ChangePosForEachDoor();
     }
     public void DoClose()
     {
+        DoorState = ElevatorDoor.CLOSING;
         _targetX = 0;
-        StartCoroutine(HorizontalPositionChange(_doorsGO[0], -_targetX));
-        StartCoroutine(HorizontalPositionChange(_doorsGO[1], _targetX));
+        ChangePosForEachDoor();
     }
 
+    private void ChangePosForEachDoor()
+    {
+        StartCoroutine(ChangeHorizontalPosition(_doorsGO[0], -_targetX));
+        StartCoroutine(ChangeHorizontalPosition(_doorsGO[1], _targetX));
+    }
 
-    private IEnumerator HorizontalPositionChange(GameObject door, float targetX)
+    private IEnumerator ChangeHorizontalPosition(GameObject door, float targetX)
     {
         float elapsedTime = 0;
         var oldPos = door.transform.localPosition;
@@ -44,6 +54,7 @@ public class ElevatorDoors : MonoBehaviour, IElevatorDoors
             yield return null;
         }
 
-        print($"Coroutine for {door.name} ended");
+        DoorState = targetX == _openedXOffset ? ElevatorDoor.OPENED : ElevatorDoor.CLOSED;
+        print($"Coroutine for {door.name} ended, door {DoorState.ToString()}");
     }
 }

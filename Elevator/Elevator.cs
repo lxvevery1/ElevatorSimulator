@@ -3,7 +3,10 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(ElevatorEngine))]
-/// <summary> Basic elevator, that can move vertically <summary>
+/// <summary>
+/// Basic elevator, that can move vertically
+/// Opens and closes its doors
+/// <summary>
 public class Elevator : MonoBehaviour
 {
     private float _position => gameObject.transform.position.y;
@@ -59,6 +62,21 @@ public class Elevator : MonoBehaviour
         {
             _driveDirection = ElevatorDriveDirection.STOP;
             print(_driveDirection);
+
+            switch (_elevatorDoors.DoorState)
+            {
+                case ElevatorDoor.OPENED:
+                    _elevatorDoors.DoClose();
+                    break;
+
+                case ElevatorDoor.CLOSED:
+                    _elevatorDoors.DoOpen();
+                    break;
+
+                default:
+                    // do nothing
+                    break;
+            }
         }
     }
 
