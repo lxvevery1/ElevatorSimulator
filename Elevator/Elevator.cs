@@ -10,6 +10,8 @@ public class Elevator : MonoBehaviour
     [SerializeField]
     private Rigidbody _rb;
 
+    [SerializeField]
+    protected ElevatorDoors _elevatorDoors;
     protected ElevatorEngine _elevatorEngine;
     protected static ElevatorDriveDirection _driveDirection = ElevatorDriveDirection.STOP;
     private static Vector3 _driveDirectionVector => DirEnumToVector(_driveDirection);

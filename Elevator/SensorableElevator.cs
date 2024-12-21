@@ -9,7 +9,6 @@ public class SensorableElevator : Elevator
     private bool _sensorsInited => _currFloor > 0;
     [SerializeField]
     private ElevatorDriveDirection _initDriveDirection;
-
     [SerializeField]
     private int _targetFloor = 1;
     private Action<float> _onApproachFloorDetectAction;
@@ -111,6 +110,7 @@ public class SensorableElevator : Elevator
             targetDirection = ElevatorDriveDirection.STOP;
             _elevatorEngine.Acceleration = ElevatorAcceleration.ZERO;
             _isApproaching = false;
+            _elevatorDoors.DoOpen();
         }
 
         _driveDirection = targetDirection;
