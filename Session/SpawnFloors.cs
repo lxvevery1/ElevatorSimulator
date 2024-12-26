@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary> Instantiate floors <summary>
@@ -10,65 +9,73 @@ public class ElevatorShaftContructor : MonoBehaviour
     private SpawnSet _spawnItems;
     private float _floorGap = 20f;
     private float _approachGap = 9.5f;
-
+    [SerializeField]
+    private int _floorSpawnCount = 5;
+    private const float _distanceBtwnFloors = 20f;
 
     private void Awake()
     {
-        Spawn(_spawnItems, Vector3.zero, Quaternion.identity, 1);
-        Spawn(_spawnItems, Vector3.up, Quaternion.identity, 2, true, FloorType.TOP_LIMIT);
-        Spawn(_spawnItems, Vector3.down, Quaternion.identity, 3, true, FloorType.BOT_LIMIT);
+        InitialSpawn();
     }
 
-    private void Spawn(SpawnSet spawnSet, Vector3 position, Quaternion rotation,
-            int id, bool isLimit = false, FloorType floorType = FloorType.BOTH)
+    private void InitialSpawn()
     {
-        spawnSet.Floor.name += id.ToString();
-        var appFloor = spawnSet.ApproachFloor.GetComponent<Floor>();
-        appFloor.FloorId = id;
-        appFloor.name += id.ToString();
-        appFloor.IsLimit = isLimit;
+        for (int i = 0; i < _floorSpawnCount; i++)
+        {
+            Vector3 position = i * _distanceBtwnFloors * Vector3.up;
+            FloorType floorType = i == 0 ? FloorType.BOT_LIMIT : i == _floorSpawnCount - 1 ? FloorType.TOP_LIMIT : FloorType.MID;
+            Spawn(_spawnItems, position, Quaternion.identity, i + 1, floorType);
+        }
+    }
+
+    private void Spawn(SpawnSet spawnSet, Vector3 position, Quaternion rotation, int id, FloorType floorType = FloorType.MID)
+    {
+        Debug.Log($"Spawning floor {id} at {position} with type {floorType}");
 
         var floor = spawnSet.Floor.GetComponent<Floor>();
-        floor.FloorId = id;
-        floor.IsLimit = isLimit;
 
-        var approachPos1 = new Vector3(position.x,
-                position.y - _approachGap,
-                position.z);
-        var approachPos2 = new Vector3(position.x,
-                position.y + _approachGap,
-                position.z);
+        var approachPos1 = new Vector3(position.x, position.y - _approachGap, position.z);
+        var approachPos2 = new Vector3(position.x, position.y + _approachGap, position.z);
 
-        Instantiate(spawnSet.Floor, position, rotation);
+        var floorInstance = Instantiate(spawnSet.Floor, position, rotation);
+        floorInstance.name = $"Floor_{id}_{floorType}";
+        SetFloorProperties(floorInstance, id, floorType);
+
         switch (floorType)
         {
-            case FloorType.BOTH:
-                Instantiate(spawnSet.ApproachFloor, approachPos1, rotation);
-                Instantiate(spawnSet.ApproachFloor, approachPos2, rotation);
+            case FloorType.BOT_LIMIT:
+                SpawnApproachFloor(spawnSet, approachPos2, rotation, id, floorType, "Bot");
+                break;
+            case FloorType.MID:
+                SpawnApproachFloor(spawnSet, approachPos1, rotation, id, floorType, "Mid_1");
+                SpawnApproachFloor(spawnSet, approachPos2, rotation, id, floorType, "Mid_2");
                 break;
             case FloorType.TOP_LIMIT:
-                Instantiate(spawnSet.ApproachFloor, approachPos1, rotation);
-                break;
-            case FloorType.BOT_LIMIT:
-                Instantiate(spawnSet.ApproachFloor, approachPos2, rotation);
+                SpawnApproachFloor(spawnSet, approachPos1, rotation, id, floorType, "Top");
                 break;
         }
     }
+
+    private void SpawnApproachFloor(SpawnSet spawnSet, Vector3 position, Quaternion rotation, int id, FloorType floorType, string suffix)
+    {
+        var approachFloorInstance = Instantiate(spawnSet.ApproachFloor, position, rotation);
+        approachFloorInstance.name = $"ApproachFloor_{id}_{suffix}";
+        SetFloorProperties(approachFloorInstance, id, floorType);
+    }
+
+    private void SetFloorProperties(GameObject floorObject, int id, FloorType floorType)
+    {
+        var floorComponent = floorObject.GetComponent<Floor>();
+        floorComponent.FloorId = id;
+        floorComponent.FloorType = floorType;
+    }
+
+
+    /// <summary> Items to spawn <summary>
+    [Serializable]
+    public struct SpawnSet
+    {
+        public GameObject Floor;
+        public GameObject ApproachFloor;
+    };
 }
-
-/// <summary> Items to spawn <summary>
-[Serializable]
-public struct SpawnSet
-{
-    public GameObject Floor;
-    public GameObject ApproachFloor;
-};
-
-
-/// <summary> Floor (Limit) type <summary>
-public enum FloorType
-{
-    TOP_LIMIT,
-    BOT_LIMIT,
-    BOTH
-};

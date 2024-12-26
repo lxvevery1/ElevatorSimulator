@@ -1,32 +1,16 @@
-using System;
 using UnityEngine;
 
 public class Floor : MonoBehaviour
 {
     public int FloorId;
-    public bool IsLimit;
-
-
-    private Floor()
-    {
-        FloorId = -1;
-        IsLimit = false;
-    }
-
-    private Floor(int floorId)
-    {
-        FloorId = floorId;
-        IsLimit = false;
-    }
-
-    public Floor(float floorId)
-    {
-        FloorId = (int)Math.Floor(floorId);
-    }
-
-    private Floor(int floorId, bool isLimit)
-    {
-        FloorId = floorId;
-        IsLimit = isLimit;
-    }
+    public bool IsLimit => FloorType != FloorType.MID;
+    public FloorType FloorType = FloorType.MID;
 }
+
+/// <summary> Floor (Limit) type <summary>
+public enum FloorType
+{
+    TOP_LIMIT,
+    BOT_LIMIT,
+    MID
+};
