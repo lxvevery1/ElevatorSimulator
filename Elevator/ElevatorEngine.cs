@@ -16,8 +16,9 @@ public class ElevatorEngine : MonoBehaviour
     [SerializeField]
     private float _acceleratedSpeed = 200f;
     [SerializeField]
-    private float _approachingSpeed = 80f;
-    private float _accelerationTime = 2.3f;
+    private float _approachingSpeed = 20f;
+    private float _maxAccelerationTime = 2.5f;
+    private float _minAccelerationTime = 2f;
 
     private ElevatorDriveDynamic _driveDynamic = ElevatorDriveDynamic.STABLE;
     private ElevatorAcceleration _acceleration = ElevatorAcceleration.ZERO;
@@ -34,17 +35,15 @@ public class ElevatorEngine : MonoBehaviour
         {
             case ElevatorAcceleration.ZERO:
                 _driveDynamic = ElevatorDriveDynamic.STABLE;
-                // Keep the speed at the default value
                 Speed = _approachingSpeed;
                 break;
 
             case ElevatorAcceleration.MAX:
-                // Gradually increase the speed to max speed
                 if (Speed < _acceleratedSpeed)
                 {
                     _driveDynamic = ElevatorDriveDynamic.ACCELERATION;
                     Speed += (_acceleratedSpeed - _approachingSpeed) *
-                        Time.deltaTime / _accelerationTime;
+                        Time.deltaTime / _maxAccelerationTime;
                 }
                 else
                 {
@@ -54,12 +53,11 @@ public class ElevatorEngine : MonoBehaviour
                 break;
 
             case ElevatorAcceleration.MIN:
-                // Gradually decrease the speed to min speed
                 if (Speed > _approachingSpeed)
                 {
                     _driveDynamic = ElevatorDriveDynamic.SLOWDOWN;
                     Speed -= (_acceleratedSpeed - _approachingSpeed) *
-                        Time.deltaTime / _accelerationTime;
+                        Time.deltaTime / (_minAccelerationTime);
                 }
                 else
                 {

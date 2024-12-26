@@ -6,16 +6,18 @@ using UnityEngine;
 public class ElevatorShaftContructor : MonoBehaviour
 {
     [SerializeField]
-    private SpawnSet _spawnItems;
+    private SpawnSet _spawnSetItems;
     private float _floorGap = 20f;
     private float _approachGap = 9.5f;
     [SerializeField]
     private int _floorSpawnCount = 5;
     private const float _distanceBtwnFloors = 20f;
 
+
     private void Awake()
     {
         InitialSpawn();
+        SpawnElevatorAtRandomPosition();
     }
 
     private void InitialSpawn()
@@ -24,7 +26,7 @@ public class ElevatorShaftContructor : MonoBehaviour
         {
             Vector3 position = i * _distanceBtwnFloors * Vector3.up;
             FloorType floorType = i == 0 ? FloorType.BOT_LIMIT : i == _floorSpawnCount - 1 ? FloorType.TOP_LIMIT : FloorType.MID;
-            Spawn(_spawnItems, position, Quaternion.identity, i + 1, floorType);
+            Spawn(_spawnSetItems, position, Quaternion.identity, i + 1, floorType);
         }
     }
 
@@ -72,6 +74,21 @@ public class ElevatorShaftContructor : MonoBehaviour
         floorComponent.transform.parent = parentObject;
     }
 
+    private void SpawnElevatorAtRandomPosition()
+    {
+        // Calculate the range for the elevator's Y position
+        float minY = 0f; // Bottom floor
+        float maxY = (_floorSpawnCount - 1) * _distanceBtwnFloors; // Top floor
+
+        // Generate a random Y position within the range
+        float randomY = UnityEngine.Random.Range(minY, maxY);
+
+        // Spawn the elevator at the random position
+        Vector3 elevatorPosition = new Vector3(0f, randomY, 0f); // Assuming X and Z are 0
+        var elevatorInstance = Instantiate(_spawnSetItems.Elevator, elevatorPosition, Quaternion.identity);
+        elevatorInstance.name = "Elevator_Random";
+        Debug.Log($"Elevator spawned at random position: {elevatorPosition}");
+    }
 
     /// <summary> Items to spawn <summary>
     [Serializable]
@@ -79,5 +96,6 @@ public class ElevatorShaftContructor : MonoBehaviour
     {
         public GameObject Floor;
         public GameObject ApproachFloor;
+        public GameObject Elevator;
     };
 }
