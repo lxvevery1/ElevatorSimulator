@@ -30,6 +30,7 @@ public class ElevatorShaftContructor : MonoBehaviour
 
     private void Spawn(SpawnSet spawnSet, Vector3 position, Quaternion rotation, int id, FloorType floorType = FloorType.MID)
     {
+        var parentObject = new GameObject("Floor_Set_" + id);
         Debug.Log($"Spawning floor {id} at {position} with type {floorType}");
 
         var floor = spawnSet.Floor.GetComponent<Floor>();
@@ -39,35 +40,36 @@ public class ElevatorShaftContructor : MonoBehaviour
 
         var floorInstance = Instantiate(spawnSet.Floor, position, rotation);
         floorInstance.name = $"Floor_{id}_{floorType}";
-        SetFloorProperties(floorInstance, id, floorType);
+        SetFloorProperties(floorInstance, parentObject.transform, id, floorType);
 
         switch (floorType)
         {
             case FloorType.BOT_LIMIT:
-                SpawnApproachFloor(spawnSet, approachPos2, rotation, id, floorType, "Bot");
+                SpawnApproachFloor(spawnSet, approachPos2, rotation, id, floorType, "Bot", parentObject.transform);
                 break;
             case FloorType.MID:
-                SpawnApproachFloor(spawnSet, approachPos1, rotation, id, floorType, "Mid_1");
-                SpawnApproachFloor(spawnSet, approachPos2, rotation, id, floorType, "Mid_2");
+                SpawnApproachFloor(spawnSet, approachPos1, rotation, id, floorType, "Mid_1", parentObject.transform);
+                SpawnApproachFloor(spawnSet, approachPos2, rotation, id, floorType, "Mid_2", parentObject.transform);
                 break;
             case FloorType.TOP_LIMIT:
-                SpawnApproachFloor(spawnSet, approachPos1, rotation, id, floorType, "Top");
+                SpawnApproachFloor(spawnSet, approachPos1, rotation, id, floorType, "Top", parentObject.transform);
                 break;
         }
     }
 
-    private void SpawnApproachFloor(SpawnSet spawnSet, Vector3 position, Quaternion rotation, int id, FloorType floorType, string suffix)
+    private void SpawnApproachFloor(SpawnSet spawnSet, Vector3 position, Quaternion rotation, int id, FloorType floorType, string suffix, Transform parentObject = null)
     {
         var approachFloorInstance = Instantiate(spawnSet.ApproachFloor, position, rotation);
         approachFloorInstance.name = $"ApproachFloor_{id}_{suffix}";
-        SetFloorProperties(approachFloorInstance, id, floorType);
+        SetFloorProperties(approachFloorInstance, parentObject, id, floorType);
     }
 
-    private void SetFloorProperties(GameObject floorObject, int id, FloorType floorType)
+    private void SetFloorProperties(GameObject floorObject, Transform parentObject, int id, FloorType floorType)
     {
         var floorComponent = floorObject.GetComponent<Floor>();
         floorComponent.FloorId = id;
         floorComponent.FloorType = floorType;
+        floorComponent.transform.parent = parentObject;
     }
 
 
