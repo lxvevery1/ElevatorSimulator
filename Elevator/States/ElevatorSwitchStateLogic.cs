@@ -45,9 +45,10 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         for (int i = 0; i <= 9; i++)
         {
             if (_currState == ElevatorStateType.Idle &&
-                    Input.GetKeyDown(KeyCode.Alpha0 + i))
+                    Input.GetKey(KeyCode.Alpha0 + i))
             {
-                MoveToFloor(i + 1);
+                _targetFloor = i + 1;
+                MoveToFloor(_targetFloor);
                 break; // Exit the loop after handling the key press
             }
         }
@@ -73,6 +74,12 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
                 ElevatorStateType.MovingDownFast :
                 ElevatorStateType.MovingUpFast;
         }
+        else
+        {
+            _currState = (targetDirection == ElevatorDriveDirection.DOWN) ?
+                ElevatorStateType.MovingDownSlow :
+                ElevatorStateType.MovingUpSlow;
+        }
 
         // we already here
         if (floorId == _elevator.Floor)
@@ -83,27 +90,6 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         }
 
         _elevator.DriveDirection = targetDirection;
-
-        // if (_elevator.DriveDirection == ElevatorDriveDirection.DOWN &&
-        //         _elevator.ElevatorEngine.Acceleration == ElevatorAcceleration.MIN)
-        // {
-        //     _currState = ElevatorStateType.MovingDownSlow;
-        // }
-        // else if (_elevator.DriveDirection == ElevatorDriveDirection.DOWN &&
-        //         _elevator.ElevatorEngine.Acceleration == ElevatorAcceleration.MAX)
-        // {
-        //     _currState = ElevatorStateType.MovingDownFast;
-        // }
-        // else if (_elevator.DriveDirection == ElevatorDriveDirection.UP &&
-        //         _elevator.ElevatorEngine.Acceleration == ElevatorAcceleration.MIN)
-        // {
-        //     _currState = ElevatorStateType.MovingUpSlow;
-        // }
-        // else if (_elevator.DriveDirection == ElevatorDriveDirection.UP &&
-        //         _elevator.ElevatorEngine.Acceleration == ElevatorAcceleration.MAX)
-        // {
-        //     _currState = ElevatorStateType.MovingUpFast;
-        // }
     }
 
     private void OnGetTargetFloor()

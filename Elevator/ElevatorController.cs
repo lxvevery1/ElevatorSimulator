@@ -78,6 +78,10 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
             _elevatorBehaviours.MovingDownSlow,
             _elevatorBehaviours.MovingUpFast,
             _elevatorBehaviours.MovingUpSlow,
+            /// ------ ///
+            _elevatorBehaviours.DoorClosing,
+            _elevatorBehaviours.DoorOpening,
+            _elevatorBehaviours.WaitingForPeople,
         });
     }
 
@@ -103,6 +107,13 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
                 _elevatorBehaviours.MovingUpFast },
             { ElevatorStateType.MovingUpSlow,
                 _elevatorBehaviours.MovingUpSlow },
+            /// ------ ///
+            { ElevatorStateType.DoorClosing,
+                _elevatorBehaviours.DoorClosing },
+            { ElevatorStateType.DoorOpening,
+                _elevatorBehaviours.DoorOpening },
+            { ElevatorStateType.WaitingForPeople,
+                _elevatorBehaviours.WaitingForPeople },
             // ...
         };
     }
@@ -120,5 +131,9 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
         public ElevatorState MovingDownSlow;
         public ElevatorState MovingUpFast;
         public ElevatorState MovingUpSlow;
+        /// ----- ///
+        public ElevatorState DoorClosing;
+        public ElevatorState DoorOpening;
+        public ElevatorState WaitingForPeople;
     }
 }
