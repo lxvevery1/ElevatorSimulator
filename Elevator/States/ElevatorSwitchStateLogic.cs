@@ -15,7 +15,9 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     [SerializeField]
     private ElevatorDriveDirection _initDriveDirection;
     private const float _peopleWaitDuration = 5.0f;
+    private const float _obstacleAlarmDuration = 2.0f;
     private int _targetFloor = 0;
+    private bool _obstacleAlarmed = false;
 
 
     private void Awake()
@@ -23,6 +25,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         _elevator.OnApproachFloorDetectAction += OnApproachFloorDetect;
         _elevator.OnGetTargetFloor += OnGetTargetFloor;
         _elevator.OnFloorDetectAction += OnFloorDetect;
+        _elevator.ElevatorDoors.OnGetObstacleAlarm += OnGetObstacleAlarm;
     }
 
     private void Start()
@@ -50,6 +53,21 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
                 _targetFloor = i + 1;
                 MoveToFloor(_targetFloor);
                 break; // Exit the loop after handling the key press
+            }
+        }
+
+        if (_elevator.ElevatorDoors.ObstacleAlarm)
+        {
+            if (!_obstacleAlarmed)
+            {
+                _currState = ElevatorStateType.ObstacleSensorAlarm;
+                _obstacleAlarmed = true;
+            }
+            else
+            {
+                _currState = ElevatorStateType.DoorOpening;
+                // handled
+                _obstacleAlarmed = false;
             }
         }
     }
@@ -92,10 +110,28 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         _elevator.DriveDirection = targetDirection;
     }
 
+
+    private void OnGetObstacleAlarm()
+    {
+        print("We got obstacle alarm!");
+        StartCoroutine(ObstacleHandleCoroutine());
+    }
+
     private void OnGetTargetFloor()
     {
         print("We got target floor!");
         StartCoroutine(DoorOperationRoutine());
+    }
+
+    private IEnumerator ObstacleHandleCoroutine()
+    {
+        _currState = ElevatorStateType.ObstacleSensorAlarm;
+        yield return new WaitForSeconds(_obstacleAlarmDuration);
+        _currState = ElevatorStateType.DoorOpening;
+        yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
+        _currState = ElevatorStateType.DoorClosing;
+        yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
+        _currState = ElevatorStateType.Idle;
     }
 
     private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)

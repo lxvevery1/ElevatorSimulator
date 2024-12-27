@@ -82,6 +82,7 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
             _elevatorBehaviours.DoorClosing,
             _elevatorBehaviours.DoorOpening,
             _elevatorBehaviours.WaitingForPeople,
+            _elevatorBehaviours.ObstacleSensorAlarm,
         });
     }
 
@@ -114,6 +115,8 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
                 _elevatorBehaviours.DoorOpening },
             { ElevatorStateType.WaitingForPeople,
                 _elevatorBehaviours.WaitingForPeople },
+            { ElevatorStateType.ObstacleSensorAlarm,
+                _elevatorBehaviours.ObstacleSensorAlarm },
             // ...
         };
     }
@@ -135,5 +138,6 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
         public ElevatorState DoorClosing;
         public ElevatorState DoorOpening;
         public ElevatorState WaitingForPeople;
+        public ElevatorState ObstacleSensorAlarm;
     }
 }
