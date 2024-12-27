@@ -4,6 +4,7 @@ using UnityEngine;
 public class SensorableElevator : Elevator
 {
     public Action<float> OnApproachFloorDetectAction;
+    public Action OnGetTargetFloor;
     public Action OnTargetFloorGetAction;
     public bool SensorsInited => _sensorsInited;
 
@@ -40,12 +41,12 @@ public class SensorableElevator : Elevator
         }
     }
 
-    public void InitSensors()
+    public void InitSensors(ElevatorDriveDirection edd)
     {
         if (!_sensorsInited)
         {
             print("Starting initialization for sensors");
-            DriveDirection = _initDriveDirection;
+            DriveDirection = edd;
         }
     }
 
@@ -86,7 +87,7 @@ public class SensorableElevator : Elevator
             print("Elevator stopped after reaching the init floor.");
             print("Sensors initialized");
 
-            MoveToFloor(_targetFloor);
+            // MoveToFloor(_targetFloor);
         }
     }
 
@@ -115,7 +116,8 @@ public class SensorableElevator : Elevator
             targetDirection = ElevatorDriveDirection.STOP;
             _elevatorEngine.Acceleration = ElevatorAcceleration.ZERO;
             _isApproaching = false;
-            _elevatorDoors.DoOpen();
+            OnGetTargetFloor?.Invoke();
+            // _elevatorDoors.DoOpen();
         }
 
         DriveDirection = targetDirection;

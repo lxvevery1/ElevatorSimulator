@@ -4,6 +4,6 @@ public class ElevatorInitialState : ElevatorState
     {
         base.OnEnterLogic();
 
-        elevator.InitSensors();
+        print("Init me!");
     }
 }

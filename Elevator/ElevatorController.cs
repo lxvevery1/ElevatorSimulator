@@ -6,6 +6,7 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
 {
     private List<ElevatorState> _elevatorStatesList = new List<ElevatorState>();
     private ElevatorState _currElevatorState;
+    private ElevatorState _elevatorState => GetState(_stateDetector.State);
     [SerializeField]
     private ElevatorBehaviours _elevatorBehaviours;
     private ElevatorSwitchStateLogic _stateDetector;
@@ -19,12 +20,12 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
         InitStatesList();
         InitStatePairs();
         DisableAllStates();
-        SwitchState(GetState(_stateDetector.State));
+        SwitchState(_elevatorState);
     }
 
     private void Update()
     {
-        SwitchState(_currElevatorState);
+        SwitchState(_elevatorState);
     }
 
     public void SwitchState(ElevatorState state)
@@ -68,7 +69,10 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
     {
         _elevatorStatesList.AddRange(new[] {
             _elevatorBehaviours.initialState,
-            _elevatorBehaviours.idleState
+            _elevatorBehaviours.idleState,
+            _elevatorBehaviours.SearchFloorUp,
+            _elevatorBehaviours.SearchFloorDown,
+            _elevatorBehaviours.ChangeSearchingDirection,
         });
     }
 
@@ -79,6 +83,11 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
         {
             { ElevatorStateType.Initial, _elevatorBehaviours.initialState },
             { ElevatorStateType.Idle, _elevatorBehaviours.idleState },
+            { ElevatorStateType.SearchFloorDownSlow,
+                _elevatorBehaviours.SearchFloorDown },
+            { ElevatorStateType.SearchFloorUpSlow, _elevatorBehaviours.SearchFloorUp },
+            { ElevatorStateType.ChangeSearchingDirection,
+                _elevatorBehaviours.ChangeSearchingDirection },
             // ...
         };
     }
@@ -88,5 +97,8 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
     {
         public ElevatorState initialState;
         public ElevatorState idleState;
+        public ElevatorState SearchFloorDown;
+        public ElevatorState SearchFloorUp;
+        public ElevatorState ChangeSearchingDirection;
     }
 }

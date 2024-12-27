@@ -9,7 +9,10 @@ using UnityEngine;
 /// <summary>
 public class Elevator : MonoBehaviour
 {
+    public ElevatorDoors ElevatorDoors { get => _elevatorDoors; }
     public ElevatorDriveDirection DriveDirection = ElevatorDriveDirection.STOP;
+    public ElevatorEngine ElevatorEngine { get => _elevatorEngine; }
+
 
     private float _position => gameObject.transform.position.y;
     [SerializeField]
@@ -97,7 +100,7 @@ public class Elevator : MonoBehaviour
     /// <summary>
     /// Changes elevator drive direction from up to down and from down to up
     /// </summary>
-    protected void ReverseElevatorDirection()
+    public void ReverseElevatorDirection()
     {
         if (DriveDirection == ElevatorDriveDirection.STOP)
             return;

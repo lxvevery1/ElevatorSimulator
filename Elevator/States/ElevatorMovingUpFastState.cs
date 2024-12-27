@@ -1,16 +1,18 @@
-using UnityEngine;
-
-public class ElevatorMovingUpFastState : MonoBehaviour
+public class ElevatorMovingUpFastState : ElevatorState
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    protected override void OnEnterLogic()
     {
-        
+        base.OnEnterLogic();
+
+        elevator.DriveDirection = ElevatorDriveDirection.UP;
+        elevator.ElevatorEngine.Acceleration = ElevatorAcceleration.MAX;
     }
 
-    // Update is called once per frame
-    void Update()
+    protected override void OnExitLogic()
     {
-        
+        base.OnExitLogic();
+
+        elevator.DriveDirection = ElevatorDriveDirection.STOP;
+        elevator.ElevatorEngine.Acceleration = ElevatorAcceleration.ZERO;
     }
 }

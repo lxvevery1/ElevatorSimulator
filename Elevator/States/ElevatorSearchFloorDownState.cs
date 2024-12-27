@@ -1,4 +1,4 @@
-public class ElevatorMovingDownSlowState : ElevatorState
+public class ElevatorSearchFloorDownState : ElevatorState
 {
     protected override void OnEnterLogic()
     {

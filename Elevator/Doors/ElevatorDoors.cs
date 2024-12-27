@@ -4,15 +4,17 @@ using System.Collections.Generic;
 
 public class ElevatorDoors : MonoBehaviour, IElevatorDoors
 {
+    public float AnimationDuration { get => _animationDuration; }
     public ElevatorDoor DoorState;
     public bool IsOpened => _isOpened;
+
 
     private const int DOOR_COUNT = 2;
     [SerializeField]
     private List<GameObject> _doorsGO = new(DOOR_COUNT);
     private float _openedXOffset = 0.65f;
     private float _targetX;
-    private float _animationDuration = 2.0f;
+    public float _animationDuration = 2.0f;
     private bool _isOpened = false;
 
 
@@ -23,6 +25,7 @@ public class ElevatorDoors : MonoBehaviour, IElevatorDoors
         _targetX = _openedXOffset;
         ChangePosForEachDoor();
     }
+
     public void DoClose()
     {
         DoorState = ElevatorDoor.CLOSING;

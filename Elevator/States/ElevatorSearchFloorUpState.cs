@@ -1,10 +1,10 @@
-public class ElevatorMovingDownSlowState : ElevatorState
+public class ElevatorSearchFloorUpState : ElevatorState
 {
     protected override void OnEnterLogic()
     {
         base.OnEnterLogic();
 
-        elevator.DriveDirection = ElevatorDriveDirection.DOWN;
+        elevator.DriveDirection = ElevatorDriveDirection.UP;
         elevator.ElevatorEngine.Acceleration = ElevatorAcceleration.MIN;
     }
 
