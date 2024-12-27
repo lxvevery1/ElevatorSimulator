@@ -6,8 +6,12 @@ public class SensorableElevator : Elevator
     public Action<float> OnApproachFloorDetectAction;
     public Action<Tuple<Tuple<float, float>, bool>> OnFloorDetectAction;
     public Action OnGetTargetFloor;
-    public Action OnTargetFloorGetAction;
     public bool SensorsInited => _sensorsInited;
+    public float Floor
+    {
+        get => _currFloor;
+        set => _currFloor = value;
+    }
 
 
     [SerializeField]
@@ -15,10 +19,7 @@ public class SensorableElevator : Elevator
     private float _currFloor;
     private bool _sensorsInited => _currFloor > 0;
     [SerializeField]
-    private ElevatorDriveDirection _initDriveDirection;
-    [SerializeField]
     private bool _isApproaching = false;
-    private int _targetFloor = 1;
 
 
     protected override bool Init()
@@ -30,33 +31,16 @@ public class SensorableElevator : Elevator
 
     private void OnApproachFloorDetect(float approachFloor)
     {
-        OnApproachFloorDetectAction?.Invoke(approachFloor);
         if (approachFloor < 1)
             return;
 
-        if (approachFloor == _targetFloor)
-        {
-            _isApproaching = true;
-            _elevatorEngine.Acceleration = ElevatorAcceleration.MIN;
-        }
+        OnApproachFloorDetectAction?.Invoke(approachFloor);
     }
 
     private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
     {
         OnFloorDetectAction?.Invoke(floors);
         print($"Elevator get floor id = <b>{floors.Item1.Item1}</b> and {floors.Item1.Item2} from sensor");
-        switch (DriveDirection)
-        {
-            case ElevatorDriveDirection.UP:
-                _currFloor = floors.Item1.Item2;
-                break;
-            case ElevatorDriveDirection.DOWN:
-                _currFloor = floors.Item1.Item1;
-                break;
-            default:
-                _currFloor = floors.Item1.Item2;
-                break;
-        }
         // Now it's in the SwitchStateLogic class
     }
 

@@ -38,7 +38,7 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
 
         _currElevatorState = state;
 
-        Debug.Log($"SwitchState({state.gameObject.name.ToString()} state)");
+        print($"<color=#00FF00>SwitchState(<b>{state.gameObject.name.ToString()}</b> state</color>");
         _currElevatorState.EnterState();
     }
 

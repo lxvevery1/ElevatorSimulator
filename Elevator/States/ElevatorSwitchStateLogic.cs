@@ -45,6 +45,8 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         {
             _currState = ElevatorStateType.Idle;
         }
+
+        // if (_currState == ElevatorStateType.Idle && )
     }
 
     private void SearchFloor()
@@ -74,6 +76,18 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
     private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
     {
+        switch (_elevator.DriveDirection)
+        {
+            case ElevatorDriveDirection.UP:
+                _elevator.Floor = floors.Item1.Item2;
+                break;
+            case ElevatorDriveDirection.DOWN:
+                _elevator.Floor = floors.Item1.Item1;
+                break;
+            default:
+                _elevator.Floor = floors.Item1.Item2;
+                break;
+        }
         // Put this if you want strange initialization
         if (!_elevator.SensorsInited)
         {
