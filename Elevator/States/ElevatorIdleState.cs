@@ -5,5 +5,7 @@ public class ElevatorIdleState : ElevatorState
         base.OnEnterLogic();
 
         elevator.DriveDirection = ElevatorDriveDirection.STOP;
+        elevator.ElevatorEngine.Acceleration = ElevatorAcceleration.ZERO;
+        elevator.IsApproaching = false;
     }
 }

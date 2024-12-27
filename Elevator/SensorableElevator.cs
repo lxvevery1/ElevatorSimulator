@@ -7,6 +7,11 @@ public class SensorableElevator : Elevator
     public Action<Tuple<Tuple<float, float>, bool>> OnFloorDetectAction;
     public Action OnGetTargetFloor;
     public bool SensorsInited => _sensorsInited;
+    public bool IsApproaching
+    {
+        get => _isApproaching;
+        set => _isApproaching = value;
+    }
     public float Floor
     {
         get => _currFloor;
@@ -44,35 +49,4 @@ public class SensorableElevator : Elevator
         // Now it's in the SwitchStateLogic class
     }
 
-    /// <summary>
-    /// Move elevator to target floor
-    /// <param name="floorId"> id of floor: 1, 2, 3, 4, ...
-    /// </summary>
-    protected void MoveToFloor(int floorId)
-    {
-        if (floorId <= 0)
-        {
-            return;
-        }
-
-        var targetDirection = floorId > _currFloor ?
-            ElevatorDriveDirection.UP :
-            ElevatorDriveDirection.DOWN;
-
-        if (!_isApproaching)
-        {
-            _elevatorEngine.Acceleration = ElevatorAcceleration.MAX;
-        }
-
-        if (floorId == _currFloor)
-        {
-            targetDirection = ElevatorDriveDirection.STOP;
-            _elevatorEngine.Acceleration = ElevatorAcceleration.ZERO;
-            _isApproaching = false;
-            OnGetTargetFloor?.Invoke();
-            // _elevatorDoors.DoOpen();
-        }
-
-        DriveDirection = targetDirection;
-    }
 }

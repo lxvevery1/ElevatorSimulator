@@ -73,6 +73,11 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
             _elevatorBehaviours.SearchFloorUp,
             _elevatorBehaviours.SearchFloorDown,
             _elevatorBehaviours.ChangeSearchingDirection,
+            /// ------ ///
+            _elevatorBehaviours.MovingDownFast,
+            _elevatorBehaviours.MovingDownSlow,
+            _elevatorBehaviours.MovingUpFast,
+            _elevatorBehaviours.MovingUpSlow,
         });
     }
 
@@ -85,9 +90,19 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
             { ElevatorStateType.Idle, _elevatorBehaviours.idleState },
             { ElevatorStateType.SearchFloorDownSlow,
                 _elevatorBehaviours.SearchFloorDown },
-            { ElevatorStateType.SearchFloorUpSlow, _elevatorBehaviours.SearchFloorUp },
+            { ElevatorStateType.SearchFloorUpSlow,
+                _elevatorBehaviours.SearchFloorUp },
             { ElevatorStateType.ChangeSearchingDirection,
                 _elevatorBehaviours.ChangeSearchingDirection },
+            /// ------ ///
+            { ElevatorStateType.MovingDownFast,
+                _elevatorBehaviours.MovingDownFast },
+            { ElevatorStateType.MovingDownSlow,
+                _elevatorBehaviours.MovingDownSlow },
+            { ElevatorStateType.MovingUpFast,
+                _elevatorBehaviours.MovingUpFast },
+            { ElevatorStateType.MovingUpSlow,
+                _elevatorBehaviours.MovingUpSlow },
             // ...
         };
     }
@@ -100,5 +115,10 @@ public class ElevatorController : MonoBehaviour, IStateController<ElevatorState>
         public ElevatorState SearchFloorDown;
         public ElevatorState SearchFloorUp;
         public ElevatorState ChangeSearchingDirection;
+        /// ----- ///
+        public ElevatorState MovingDownFast;
+        public ElevatorState MovingDownSlow;
+        public ElevatorState MovingUpFast;
+        public ElevatorState MovingUpSlow;
     }
 }

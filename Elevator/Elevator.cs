@@ -50,40 +50,6 @@ public class Elevator : MonoBehaviour
         Init();
     }
 
-    private void Update()
-    {
-        // if (Input.GetKeyDown(KeyCode.W))
-        // {
-        //     _driveDirection = ElevatorDriveDirection.UP;
-        //     print(_driveDirection);
-        // }
-        // if (Input.GetKeyDown(KeyCode.S))
-        // {
-        //     _driveDirection = ElevatorDriveDirection.DOWN;
-        //     print(_driveDirection);
-        // }
-        // if (Input.GetKeyDown(KeyCode.Space))
-        // {
-        //     _driveDirection = ElevatorDriveDirection.STOP;
-        //     print(_driveDirection);
-        //
-        //     switch (_elevatorDoors.DoorState)
-        //     {
-        //         case ElevatorDoor.OPENED:
-        //             _elevatorDoors.DoClose();
-        //             break;
-        //
-        //         case ElevatorDoor.CLOSED:
-        //             _elevatorDoors.DoOpen();
-        //             break;
-        //
-        //         default:
-        //             // do nothing
-        //             break;
-        //     }
-        // }
-    }
-
     protected virtual void FixedUpdate()
     {
         MoveBody(DriveDirection);
