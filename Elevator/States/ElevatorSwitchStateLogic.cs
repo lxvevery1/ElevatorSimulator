@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -11,6 +12,8 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private SensorableElevator _elevator;
     private ElevatorStateType _currState = ElevatorStateType.Initial;
     private ElevatorDoors _elevatorDoors => _elevator.ElevatorDoors;
+    [SerializeField]
+    private ElevatorDriveDirection _initDriveDirection;
     private const float _peopleWaitDuration = 5.0f;
 
 
@@ -18,6 +21,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     {
         _elevator.OnApproachFloorDetectAction += OnApproachFloorDetect;
         _elevator.OnGetTargetFloor += OnGetTargetFloor;
+        _elevator.OnFloorDetectAction += OnFloorDetect;
     }
 
     private void Start()
@@ -30,7 +34,10 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         if (_currState == ElevatorStateType.Initial &&
                 Input.GetKeyDown(KeyCode.Space))
         {
-            _currState = ElevatorStateType.SearchFloorDownSlow;
+            if (_initDriveDirection == ElevatorDriveDirection.DOWN)
+                _currState = ElevatorStateType.SearchFloorDownSlow;
+            else if (_initDriveDirection == ElevatorDriveDirection.UP)
+                _currState = ElevatorStateType.SearchFloorUpSlow;
         }
         if ((_currState == ElevatorStateType.SearchFloorDownSlow ||
                 _currState == ElevatorStateType.SearchFloorUpSlow) &&
@@ -63,6 +70,31 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private void OnGetTargetFloor()
     {
         StartCoroutine(DoorOperationRoutine());
+    }
+
+    private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
+    {
+        // Put this if you want strange initialization
+        if (!_elevator.SensorsInited)
+        {
+            if (_initDriveDirection == ElevatorDriveDirection.DOWN &&
+                    floors.Item2)
+            {
+                _currState = ElevatorStateType.ChangeSearchingDirection;
+            }
+            else if (_initDriveDirection == ElevatorDriveDirection.UP &&
+                    floors.Item2)
+            {
+                _currState = ElevatorStateType.ChangeSearchingDirection;
+            }
+        }
+
+        if (_elevator.SensorsInited && _elevator.DriveDirection !=
+                ElevatorDriveDirection.STOP)
+        {
+            // initialization completed
+            _currState = ElevatorStateType.Idle;
+        }
     }
 
     private IEnumerator DoorOperationRoutine()

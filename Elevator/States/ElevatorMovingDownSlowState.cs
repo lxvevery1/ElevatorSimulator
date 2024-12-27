@@ -11,8 +11,5 @@ public class ElevatorMovingDownSlowState : ElevatorState
     protected override void OnExitLogic()
     {
         base.OnExitLogic();
-
-        elevator.DriveDirection = ElevatorDriveDirection.STOP;
-        elevator.ElevatorEngine.Acceleration = ElevatorAcceleration.ZERO;
     }
 }

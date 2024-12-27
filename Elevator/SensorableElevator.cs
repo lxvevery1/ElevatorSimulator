@@ -4,6 +4,7 @@ using UnityEngine;
 public class SensorableElevator : Elevator
 {
     public Action<float> OnApproachFloorDetectAction;
+    public Action<Tuple<Tuple<float, float>, bool>> OnFloorDetectAction;
     public Action OnGetTargetFloor;
     public Action OnTargetFloorGetAction;
     public bool SensorsInited => _sensorsInited;
@@ -24,7 +25,6 @@ public class SensorableElevator : Elevator
     {
         _floorCalc.OnFloorDetectAction += OnFloorDetect;
         _floorCalc.OnApproachFloorDetectAction += OnApproachFloorDetect;
-        // InitSensors();
         return base.Init();
     }
 
@@ -41,17 +41,9 @@ public class SensorableElevator : Elevator
         }
     }
 
-    public void InitSensors(ElevatorDriveDirection edd)
-    {
-        if (!_sensorsInited)
-        {
-            print("Starting initialization for sensors");
-            DriveDirection = edd;
-        }
-    }
-
     private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
     {
+        OnFloorDetectAction?.Invoke(floors);
         print($"Elevator get floor id = <b>{floors.Item1.Item1}</b> and {floors.Item1.Item2} from sensor");
         switch (DriveDirection)
         {
@@ -65,30 +57,7 @@ public class SensorableElevator : Elevator
                 _currFloor = floors.Item1.Item2;
                 break;
         }
-
-        // Put this if you want strange initialization
-        if (!_sensorsInited)
-        {
-            if (_initDriveDirection == ElevatorDriveDirection.DOWN &&
-                    floors.Item2)
-            {
-                ReverseElevatorDirection();
-            }
-            else if (_initDriveDirection == ElevatorDriveDirection.UP &&
-                    floors.Item2)
-            {
-                ReverseElevatorDirection();
-            }
-        }
-
-        if (_sensorsInited && DriveDirection != ElevatorDriveDirection.STOP)
-        {
-            DriveDirection = ElevatorDriveDirection.STOP;
-            print("Elevator stopped after reaching the init floor.");
-            print("Sensors initialized");
-
-            // MoveToFloor(_targetFloor);
-        }
+        // Now it's in the SwitchStateLogic class
     }
 
     /// <summary>
