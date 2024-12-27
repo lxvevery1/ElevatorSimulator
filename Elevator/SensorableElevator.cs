@@ -40,14 +40,14 @@ public class SensorableElevator : Elevator
         if (!_sensorsInited)
         {
             print("Starting initialization for sensors");
-            _driveDirection = _initDriveDirection;
+            DriveDirection = _initDriveDirection;
         }
     }
 
     private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
     {
         print($"Elevator get floor id = <b>{floors.Item1.Item1}</b> and {floors.Item1.Item2} from sensor");
-        switch (_driveDirection)
+        switch (DriveDirection)
         {
             case ElevatorDriveDirection.UP:
                 _currFloor = floors.Item1.Item2;
@@ -75,9 +75,9 @@ public class SensorableElevator : Elevator
             }
         }
 
-        if (_sensorsInited && _driveDirection != ElevatorDriveDirection.STOP)
+        if (_sensorsInited && DriveDirection != ElevatorDriveDirection.STOP)
         {
-            _driveDirection = ElevatorDriveDirection.STOP;
+            DriveDirection = ElevatorDriveDirection.STOP;
             print("Elevator stopped after reaching the init floor.");
             print("Sensors initialized");
 
@@ -113,6 +113,6 @@ public class SensorableElevator : Elevator
             _elevatorDoors.DoOpen();
         }
 
-        _driveDirection = targetDirection;
+        DriveDirection = targetDirection;
     }
 }

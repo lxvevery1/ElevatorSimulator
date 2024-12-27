@@ -9,6 +9,7 @@ using UnityEngine;
 /// <summary>
 public class Elevator : MonoBehaviour
 {
+    public static ElevatorDriveDirection DriveDirection = ElevatorDriveDirection.STOP;
     private float _position => gameObject.transform.position.y;
     [SerializeField]
     private Rigidbody _rb;
@@ -16,8 +17,7 @@ public class Elevator : MonoBehaviour
     [SerializeField]
     protected ElevatorDoors _elevatorDoors;
     protected ElevatorEngine _elevatorEngine;
-    protected static ElevatorDriveDirection _driveDirection = ElevatorDriveDirection.STOP;
-    private static Vector3 _driveDirectionVector => DirEnumToVector(_driveDirection);
+    private static Vector3 _driveDirectionVector => DirEnumToVector(DriveDirection);
 
     private static Vector3 DirEnumToVector(ElevatorDriveDirection dirEnum) =>
         dirEnum switch
@@ -48,41 +48,41 @@ public class Elevator : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            _driveDirection = ElevatorDriveDirection.UP;
-            print(_driveDirection);
-        }
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            _driveDirection = ElevatorDriveDirection.DOWN;
-            print(_driveDirection);
-        }
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            _driveDirection = ElevatorDriveDirection.STOP;
-            print(_driveDirection);
-
-            switch (_elevatorDoors.DoorState)
-            {
-                case ElevatorDoor.OPENED:
-                    _elevatorDoors.DoClose();
-                    break;
-
-                case ElevatorDoor.CLOSED:
-                    _elevatorDoors.DoOpen();
-                    break;
-
-                default:
-                    // do nothing
-                    break;
-            }
-        }
+        // if (Input.GetKeyDown(KeyCode.W))
+        // {
+        //     _driveDirection = ElevatorDriveDirection.UP;
+        //     print(_driveDirection);
+        // }
+        // if (Input.GetKeyDown(KeyCode.S))
+        // {
+        //     _driveDirection = ElevatorDriveDirection.DOWN;
+        //     print(_driveDirection);
+        // }
+        // if (Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     _driveDirection = ElevatorDriveDirection.STOP;
+        //     print(_driveDirection);
+        //
+        //     switch (_elevatorDoors.DoorState)
+        //     {
+        //         case ElevatorDoor.OPENED:
+        //             _elevatorDoors.DoClose();
+        //             break;
+        //
+        //         case ElevatorDoor.CLOSED:
+        //             _elevatorDoors.DoOpen();
+        //             break;
+        //
+        //         default:
+        //             // do nothing
+        //             break;
+        //     }
+        // }
     }
 
     protected virtual void FixedUpdate()
     {
-        MoveBody(_driveDirection);
+        MoveBody(DriveDirection);
     }
 
     protected void MoveBody(ElevatorDriveDirection dir)
@@ -98,10 +98,10 @@ public class Elevator : MonoBehaviour
     /// </summary>
     protected void ReverseElevatorDirection()
     {
-        if (_driveDirection == ElevatorDriveDirection.STOP)
+        if (DriveDirection == ElevatorDriveDirection.STOP)
             return;
 
-        _driveDirection = (_driveDirection == ElevatorDriveDirection.UP) ?
+        DriveDirection = (DriveDirection == ElevatorDriveDirection.UP) ?
             ElevatorDriveDirection.DOWN :
             ElevatorDriveDirection.UP;
     }
