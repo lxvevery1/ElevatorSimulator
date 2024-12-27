@@ -3,7 +3,7 @@ using UnityEngine;
 public class ElevatorState : MonoBehaviour, IStateComponent
 {
     [SerializeField]
-    protected Elevator elevator;
+    protected SensorableElevator elevator;
 
 
     private void Awake()
@@ -17,13 +17,13 @@ public class ElevatorState : MonoBehaviour, IStateComponent
     }
 
 
-    public virtual void EnterState()
+    public void EnterState()
     {
         this.gameObject.SetActive(true);
         OnEnterLogic();
     }
 
-    public virtual void ExitState()
+    public void ExitState()
     {
         OnExitLogic();
         this.gameObject.SetActive(false);
@@ -36,8 +36,8 @@ public class ElevatorState : MonoBehaviour, IStateComponent
 
     private bool InitElevatorComponent()
     {
-        elevator ??= GetComponentInParent<Elevator>() ??
-            GetComponentInChildren<Elevator>();
+        elevator ??= GetComponentInParent<SensorableElevator>() ??
+            GetComponentInChildren<SensorableElevator>();
 
         return elevator;
     }

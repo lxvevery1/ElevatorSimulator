@@ -1,4 +1,4 @@
-public enum ElevatorStates
+public enum ElevatorStateType
 {
     // To initialize elevator
     // Set the current cabin floor, read it from sensor

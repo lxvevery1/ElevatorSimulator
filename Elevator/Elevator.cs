@@ -9,7 +9,8 @@ using UnityEngine;
 /// <summary>
 public class Elevator : MonoBehaviour
 {
-    public static ElevatorDriveDirection DriveDirection = ElevatorDriveDirection.STOP;
+    public ElevatorDriveDirection DriveDirection = ElevatorDriveDirection.STOP;
+
     private float _position => gameObject.transform.position.y;
     [SerializeField]
     private Rigidbody _rb;
@@ -17,7 +18,7 @@ public class Elevator : MonoBehaviour
     [SerializeField]
     protected ElevatorDoors _elevatorDoors;
     protected ElevatorEngine _elevatorEngine;
-    private static Vector3 _driveDirectionVector => DirEnumToVector(DriveDirection);
+    private Vector3 _driveDirectionVector => DirEnumToVector(DriveDirection);
 
     private static Vector3 DirEnumToVector(ElevatorDriveDirection dirEnum) =>
         dirEnum switch
@@ -108,7 +109,7 @@ public class Elevator : MonoBehaviour
 
 
     [DrawGizmo(GizmoType.Selected | GizmoType.Active)]
-    private static void DrawDirectionVectorGizmo(Elevator elevator, GizmoType gizmoType)
+    private void DrawDirectionVectorGizmo(Elevator elevator, GizmoType gizmoType)
     {
         Gizmos.DrawLine(elevator.transform.position, _driveDirectionVector);
     }

@@ -3,6 +3,11 @@ using UnityEngine;
 
 public class SensorableElevator : Elevator
 {
+    public Action<float> OnApproachFloorDetectAction;
+    public Action OnTargetFloorGetAction;
+    public bool SensorsInited => _sensorsInited;
+
+
     [SerializeField]
     private FloorCalculator _floorCalc;
     private float _currFloor;
@@ -10,21 +15,21 @@ public class SensorableElevator : Elevator
     [SerializeField]
     private ElevatorDriveDirection _initDriveDirection;
     [SerializeField]
-    private int _targetFloor = 1;
-    private Action<float> _onApproachFloorDetectAction;
     private bool _isApproaching = false;
+    private int _targetFloor = 1;
 
 
     protected override bool Init()
     {
         _floorCalc.OnFloorDetectAction += OnFloorDetect;
         _floorCalc.OnApproachFloorDetectAction += OnApproachFloorDetect;
-        InitSensors();
+        // InitSensors();
         return base.Init();
     }
 
     private void OnApproachFloorDetect(float approachFloor)
     {
+        OnApproachFloorDetectAction?.Invoke(approachFloor);
         if (approachFloor < 1)
             return;
 
@@ -35,7 +40,7 @@ public class SensorableElevator : Elevator
         }
     }
 
-    private void InitSensors()
+    public void InitSensors()
     {
         if (!_sensorsInited)
         {
