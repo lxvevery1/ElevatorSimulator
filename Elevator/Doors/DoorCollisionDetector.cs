@@ -11,7 +11,8 @@ public class DoorCollisionDetector : MonoBehaviour
         if (ElevatorDoors != null && !other.isTrigger)
         {
             // Only trigger the alarm if the doors are opening or closing
-            if (ElevatorDoors.DoorState == ElevatorDoor.OPENING || ElevatorDoors.DoorState == ElevatorDoor.CLOSING)
+            if (ElevatorDoors.DoorState == ElevatorDoor.OPENING ||
+                    ElevatorDoors.DoorState == ElevatorDoor.CLOSING)
             {
                 ElevatorDoors.ObstacleAlarm = true;
             }

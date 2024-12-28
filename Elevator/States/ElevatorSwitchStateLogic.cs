@@ -15,7 +15,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     [SerializeField]
     private ElevatorDriveDirection _initDriveDirection;
     private const float _peopleWaitDuration = 5.0f;
-    private const float _obstacleAlarmDuration = 2.0f;
+    private const float _obstacleAlarmDuration = 5.0f;
     private int _targetFloor = 0;
     private bool _obstacleAlarmed = false;
 
@@ -55,21 +55,6 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
                 break; // Exit the loop after handling the key press
             }
         }
-
-        if (_elevator.ElevatorDoors.ObstacleAlarm)
-        {
-            if (!_obstacleAlarmed)
-            {
-                _currState = ElevatorStateType.ObstacleSensorAlarm;
-                _obstacleAlarmed = true;
-            }
-            else
-            {
-                _currState = ElevatorStateType.DoorOpening;
-                // handled
-                _obstacleAlarmed = false;
-            }
-        }
     }
 
     /// <summary>
@@ -81,6 +66,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         print($"<color=#FFF000>Move to floor {floorId}...</color>");
         if (floorId <= 0)
             return;
+
 
         var targetDirection = floorId > _elevator.Floor ?
             ElevatorDriveDirection.UP :
@@ -114,24 +100,36 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private void OnGetObstacleAlarm()
     {
         print("We got obstacle alarm!");
-        StartCoroutine(ObstacleHandleCoroutine());
+        if (_elevator.ElevatorDoors.ObstacleAlarm)
+        {
+            _obstacleAlarmed = true;
+            StartCoroutine(ObstacleHandleCoroutine());
+        }
+        else
+            print("Nah, it's fine already!");
     }
 
     private void OnGetTargetFloor()
     {
         print("We got target floor!");
-        StartCoroutine(DoorOperationRoutine());
+        if (!_elevator.ElevatorDoors.ObstacleAlarm)
+            StartCoroutine(DoorOperationRoutine());
     }
 
     private IEnumerator ObstacleHandleCoroutine()
     {
-        _currState = ElevatorStateType.ObstacleSensorAlarm;
-        yield return new WaitForSeconds(_obstacleAlarmDuration);
-        _currState = ElevatorStateType.DoorOpening;
-        yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
-        _currState = ElevatorStateType.DoorClosing;
-        yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
-        _currState = ElevatorStateType.Idle;
+        if (_elevator.ElevatorDoors.ObstacleAlarm && _obstacleAlarmed)
+        {
+            _currState = ElevatorStateType.ObstacleSensorAlarm;
+            yield return new WaitForSeconds(_obstacleAlarmDuration);
+            _currState = ElevatorStateType.DoorOpening;
+            yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
+            _currState = ElevatorStateType.DoorClosing;
+            yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
+            _currState = ElevatorStateType.Idle;
+
+            _obstacleAlarmed = false;
+        }
     }
 
     private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
@@ -151,12 +149,14 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         // Put this if you want strange initialization
         if (!_elevator.SensorsInited)
         {
-            if (_initDriveDirection == ElevatorDriveDirection.DOWN &&
+            if ((_currState == ElevatorStateType.SearchFloorDownSlow ||
+                    _currState == ElevatorStateType.SearchFloorDown) &&
                     floors.Item2)
             {
                 _currState = ElevatorStateType.ChangeSearchingDirection;
             }
-            else if (_initDriveDirection == ElevatorDriveDirection.UP &&
+            else if ((_currState == ElevatorStateType.SearchFloorUpSlow ||
+                    _currState == ElevatorStateType.SearchFloorUp) &&
                     floors.Item2)
             {
                 _currState = ElevatorStateType.ChangeSearchingDirection;
