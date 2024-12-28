@@ -1,10 +1,9 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using Unity.Netcode;
 
 /// <summary> Returns Elevator's state at current moment </summary>
-public class ElevatorSwitchStateLogic : NetworkBehaviour
+public class ElevatorSwitchStateLogic : MonoBehaviour
 {
     public ElevatorStateType State { get => _currState; }
 
@@ -36,12 +35,6 @@ public class ElevatorSwitchStateLogic : NetworkBehaviour
 
     private void Update()
     {
-        InitSearchDirection();
-        FloorButtonPressSimilation();
-    }
-
-    private void InitSearchDirection()
-    {
         if (_currState == ElevatorStateType.Initial &&
                 Input.GetKeyDown(KeyCode.Space))
         {
@@ -50,10 +43,7 @@ public class ElevatorSwitchStateLogic : NetworkBehaviour
             else if (_initDriveDirection == ElevatorDriveDirection.UP)
                 _currState = ElevatorStateType.SearchFloorUpSlow;
         }
-    }
 
-    private void FloorButtonPressSimilation()
-    {
         // Check for number key presses (0-9)
         for (int i = 0; i <= 9; i++)
         {
@@ -62,10 +52,11 @@ public class ElevatorSwitchStateLogic : NetworkBehaviour
             {
                 _targetFloor = i + 1;
                 MoveToFloor(_targetFloor);
-                break;
+                break; // Exit the loop after handling the key press
             }
         }
     }
+
     /// <summary>
     /// Move elevator to target floor
     /// <param name="floorId"> id of floor: 1, 2, 3, 4, ...
