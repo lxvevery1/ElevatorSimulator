@@ -26,36 +26,47 @@ public class FloorCalculator : MonoBehaviour
         _floorSensors.Clear();
         _floorSensors.Add(_floorBottom);
         _floorSensors.Add(_floorTop);
+    }
 
+    // YEAH! Now I'm checking sensors state every frame!
+    private void Update()
+    {
         foreach (var sensor in _floorSensors)
         {
-            sensor.OnFloorDetectAction += OnFloorDetect;
-            sensor.OnApproachFloorDetectAction += OnApproachFloorDetect;
+            if (sensor.SensorDataFloor.isActive)
+            {
+                OnFloorDetect(sensor.SensorDataFloor);
+            }
+            if (sensor.SensorDataApproach.isActive)
+            {
+                OnApproachFloorDetect(sensor.SensorDataApproach);
+            }
         }
     }
 
-    private void OnApproachFloorDetect(Floor floor)
+    private void OnApproachFloorDetect(FloorSensor.SensorData sensorData)
     {
-        OnApproachFloorDetectAction.Invoke(floor.FloorId);
-        print($"{this.name} approaching floor -> {floor.FloorId}");
+        OnApproachFloorDetectAction.Invoke(sensorData.floor);
+        print($"{this.name} approaching floor -> {sensorData.floor}");
     }
 
-    private void OnFloorDetect(Floor floor)
+    private void OnFloorDetect(FloorSensor.SensorData sensorData)
     {
-        if (floor.FloorId > 0 && _lastFloorDetected > 0)
+        if (sensorData.floor > 0 && _lastFloorDetected > 0)
         {
             Tuple<float, float> topBottomFloors = new Tuple<float, float>
-                (floor.FloorId, _lastFloorDetected);
+                (sensorData.floor, _lastFloorDetected);
             _calculatedFloorUP = DetectCurrentFloorUP(topBottomFloors);
             _calculatedFloorDOWN = DetectCurrentFloorDOWN(topBottomFloors);
         }
-        _lastFloorDetected = floor.FloorId;
+
+        _lastFloorDetected = sensorData.floor;
 
         OnFloorDetectAction?.Invoke(
                 new Tuple<Tuple<float, float>, bool>
                 (new Tuple<float, float>(_calculatedFloorDOWN, _calculatedFloorUP),
-                 floor.IsLimit));
-        print($"{this.name} current floor -> {floor.FloorId}");
+                 sensorData.isLimit));
+        print($"{this.name} current floor -> {sensorData.floor}");
     }
 
     private float DetectCurrentFloorUP(Tuple<float, float> floorPair) =>

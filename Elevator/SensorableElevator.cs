@@ -45,7 +45,7 @@ public class SensorableElevator : Elevator
     private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
     {
         OnFloorDetectAction?.Invoke(floors);
-        print($"Elevator get floor id = <b>{floors.Item1.Item1}</b> and {floors.Item1.Item2} from sensor");
+        print($"Elevator get floor id = <b>{floors.Item1.Item1}</b> and <b>{floors.Item1.Item2}</b> from sensor");
         // Now it's in the SwitchStateLogic class
     }
 

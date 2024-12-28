@@ -1,9 +1,9 @@
 using System;
-using Unity.Netcode;
 using UnityEngine;
 
-/// <summary> Instantiate floors and elevators </summary>
-public class ElevatorShaftContructor : NetworkBehaviour
+/// <summary> Instantiate floors <summary>
+
+public class ElevatorShaftContructor : MonoBehaviour
 {
     [SerializeField]
     private SpawnSet _spawnSetItems;
@@ -12,21 +12,12 @@ public class ElevatorShaftContructor : NetworkBehaviour
     [SerializeField]
     private int _floorSpawnCount = 5;
     private const float _distanceBtwnFloors = 20f;
-    private bool _elevatorSpawned = false;
+
 
     private void Awake()
     {
         InitialSpawn();
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && !_elevatorSpawned)
-        {
-            print("I see you trying");
-            SpawnElevatorAtRandomPositionServerRpc();
-            _elevatorSpawned = true;
-        }
+        SpawnElevatorAtRandomPosition();
     }
 
     private void InitialSpawn()
@@ -92,8 +83,7 @@ public class ElevatorShaftContructor : NetworkBehaviour
         floorComponent.transform.parent = parentObject;
     }
 
-    [ServerRpc]
-    private void SpawnElevatorAtRandomPositionServerRpc(ServerRpcParams rpcParams = default)
+    private void SpawnElevatorAtRandomPosition()
     {
         float minY = 0f; // Bottom floor
         float maxY = (_floorSpawnCount - 1) * _distanceBtwnFloors; // Top floor
@@ -104,20 +94,10 @@ public class ElevatorShaftContructor : NetworkBehaviour
         var elevatorInstance = Instantiate(_spawnSetItems.Elevator, elevatorPosition,
                 Quaternion.identity);
         elevatorInstance.name = "Elevator_Random";
-
-        // Make the elevator a NetworkObject
-        var networkObject = elevatorInstance.GetComponent<NetworkObject>();
-        if (networkObject != null)
-        {
-            networkObject.Spawn();
-            // Assign ownership to the client that requested the spawn
-            networkObject.ChangeOwnership(rpcParams.Receive.SenderClientId);
-        }
-
         print($"Elevator spawned at random position: {elevatorPosition}");
     }
 
-    /// <summary> Items to spawn </summary>
+    /// <summary> Items to spawn <summary>
     [Serializable]
     public struct SpawnSet
     {
