@@ -3,19 +3,28 @@ using UnityEngine;
 
 public class FloorTextSync : MonoBehaviour
 {
-    private SensorableElevator _elevator;
+    [SerializeField]
+    private FloorSensor _sensor;
     private TextMeshPro _textMeshPro;
+
+    private bool _isInited = false;
 
 
     private void Awake()
     {
-        _elevator ??= GetComponentInParent<SensorableElevator>();
+        _sensor ??= GetComponentInParent<FloorSensor>();
         _textMeshPro ??= GetComponent<TextMeshPro>();
     }
 
 
     private void Update()
     {
-        _textMeshPro.text = _elevator.Floor.ToString();
+        if (_textMeshPro && _sensor)
+            _textMeshPro.text = _sensor.SensorDataFloor.floorId.ToString();
+        else if (_isInited)
+        {
+            Debug.LogError("Bad init");
+        }
+
     }
 }

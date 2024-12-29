@@ -6,6 +6,7 @@ using UnityEngine;
 /// <summary>
 /// Basic elevator, that can move vertically
 /// Opens and closes its doors
+/// Regulates speed with it's engine
 /// <summary>
 public class Elevator : MonoBehaviour
 {
@@ -14,7 +15,6 @@ public class Elevator : MonoBehaviour
     public ElevatorEngine ElevatorEngine { get => _elevatorEngine; }
 
 
-    private float _position => gameObject.transform.position.y;
     [SerializeField]
     private Rigidbody _rb;
 

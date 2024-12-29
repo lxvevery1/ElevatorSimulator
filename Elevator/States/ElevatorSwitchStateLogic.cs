@@ -9,23 +9,29 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
 
     [SerializeField]
-    private SensorableElevator _elevator;
+    private FloorSensor _floorSensor;
+    [SerializeField]
+    private ObstacleSensorPack _obstacleSensors;
+    [SerializeField]
+    private DoorPositionSensorPack _doorSensors;
     private ElevatorStateType _currState = ElevatorStateType.Initial;
-    private ElevatorDoors _elevatorDoors => _elevator.ElevatorDoors;
     [SerializeField]
     private ElevatorDriveDirection _initDriveDirection;
     private const float _peopleWaitDuration = 5.0f;
     private const float _obstacleAlarmDuration = 5.0f;
     private int _targetFloor = 0;
+    private int _currFloor = 0;
     private bool _obstacleAlarmed = false;
+    private bool _isApproaching = false;
+    private bool _sensorsInited => _currFloor > 1;
 
 
     private void Awake()
     {
-        _elevator.OnApproachFloorDetectAction += OnApproachFloorDetect;
-        _elevator.OnGetTargetFloor += OnGetTargetFloor;
-        _elevator.OnFloorDetectAction += OnFloorDetect;
-        _elevator.ElevatorDoors.OnGetObstacleAlarm += OnGetObstacleAlarm;
+        _floorSensor.OnApproachFloorDetectAction += OnApproachFloorDetect;
+        _floorSensor.OnFloorDetectAction += OnFloorDetect;
+        // _floorSensor.OnGetTargetFloor += OnGetTargetFloor;
+        // _elevator.ElevatorDoors.OnGetObstacleAlarm += OnGetObstacleAlarm;
     }
 
     private void Start()
@@ -34,6 +40,11 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     }
 
     private void Update()
+    {
+
+    }
+
+    private void LateUpdate()
     {
         if (_currState == ElevatorStateType.Initial &&
                 Input.GetKeyDown(KeyCode.Space))
@@ -55,6 +66,16 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
                 break; // Exit the loop after handling the key press
             }
         }
+
+        // we already here
+        if ((_currState == ElevatorStateType.MovingUpSlow ||
+                    _currState == ElevatorStateType.MovingUpFast ||
+                    _currState == ElevatorStateType.MovingDownFast ||
+                    _currState == ElevatorStateType.MovingDownSlow) &&
+                _targetFloor == _currFloor)
+        {
+            _currState = ElevatorStateType.Idle;
+        }
     }
 
     /// <summary>
@@ -68,39 +89,42 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
             return;
 
 
-        var targetDirection = floorId > _elevator.Floor ?
+        var targetDirection = floorId > _currFloor ?
             ElevatorDriveDirection.UP :
             ElevatorDriveDirection.DOWN;
 
-        if (!_elevator.IsApproaching)
+
+        if (_floorSensor.SensorDataApproach.floorId !=
+                _currFloor)
         {
+            print("<color=#00FF00>Approach == Floor sensor");
             _currState = (targetDirection == ElevatorDriveDirection.DOWN) ?
                 ElevatorStateType.MovingDownFast :
                 ElevatorStateType.MovingUpFast;
         }
         else
         {
+            print("<color=#F00000>Approach != Floor sensor");
             _currState = (targetDirection == ElevatorDriveDirection.DOWN) ?
                 ElevatorStateType.MovingDownSlow :
                 ElevatorStateType.MovingUpSlow;
         }
-
         // we already here
-        if (floorId == _elevator.Floor)
+        if (floorId == _currFloor)
         {
             targetDirection = ElevatorDriveDirection.STOP;
             _currState = ElevatorStateType.Idle;
-            _elevator.OnGetTargetFloor?.Invoke();
         }
 
-        _elevator.DriveDirection = targetDirection;
     }
 
 
     private void OnGetObstacleAlarm()
     {
         print("We got obstacle alarm!");
-        if (_elevator.ElevatorDoors.ObstacleAlarm)
+        if ((_obstacleSensors._sensorLeftDoor.ObstacleAlarm ||
+                    _obstacleSensors._sensorRightDoor.ObstacleAlarm) &&
+                !_obstacleAlarmed)
         {
             _obstacleAlarmed = true;
             StartCoroutine(ObstacleHandleCoroutine());
@@ -112,62 +136,52 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private void OnGetTargetFloor()
     {
         print("We got target floor!");
-        if (!_elevator.ElevatorDoors.ObstacleAlarm)
+        if ((!_obstacleSensors._sensorLeftDoor.ObstacleAlarm
+                    && !_obstacleSensors._sensorRightDoor.ObstacleAlarm))
             StartCoroutine(DoorOperationRoutine());
     }
 
     private IEnumerator ObstacleHandleCoroutine()
     {
-        if (_elevator.ElevatorDoors.ObstacleAlarm && _obstacleAlarmed)
-        {
-            _currState = ElevatorStateType.ObstacleSensorAlarm;
-            yield return new WaitForSeconds(_obstacleAlarmDuration);
-            _currState = ElevatorStateType.DoorOpening;
-            yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
-            _currState = ElevatorStateType.DoorClosing;
-            yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
-            _currState = ElevatorStateType.Idle;
+        _currState = ElevatorStateType.ObstacleSensorAlarm;
+        yield return new WaitForSeconds(0.1f); // DEBUG
+        _currState = ElevatorStateType.DoorOpening;
+        yield return new WaitUntil(() => _doorSensors._sensorOpenedLeft.IsActive &&
+                _doorSensors._sensorOpenedLeft.IsActive);
+        yield return new WaitForSeconds(_obstacleAlarmDuration);
+        _currState = ElevatorStateType.DoorClosing;
+        yield return new WaitUntil(() => _doorSensors._sensorClosedLeft.IsActive &&
+                _doorSensors._sensorClosedRight.IsActive);
+        _currState = ElevatorStateType.Idle;
 
-            _obstacleAlarmed = false;
-        }
+        _obstacleAlarmed = false;
     }
 
-    private void OnFloorDetect(Tuple<Tuple<float, float>, bool> floors)
+    private void OnFloorDetect(FloorSensor.SensorData floorSensorData)
     {
-        switch (_elevator.DriveDirection)
-        {
-            case ElevatorDriveDirection.UP:
-                _elevator.Floor = floors.Item1.Item2;
-                break;
-            case ElevatorDriveDirection.DOWN:
-                _elevator.Floor = floors.Item1.Item1;
-                break;
-            default:
-                _elevator.Floor = floors.Item1.Item2;
-                break;
-        }
+        _currFloor = floorSensorData.floorId;
+
         // Put this if you want strange initialization
-        if (!_elevator.SensorsInited)
+        if (_floorSensor.SensorDataFloor.floorId > 1 && floorSensorData.isLimit)
         {
-            if ((_currState == ElevatorStateType.SearchFloorDownSlow ||
-                    _currState == ElevatorStateType.SearchFloorDown) &&
-                    floors.Item2)
+            if (_currState == ElevatorStateType.SearchFloorDownSlow ||
+                    _currState == ElevatorStateType.SearchFloorDown)
             {
                 _currState = ElevatorStateType.ChangeSearchingDirection;
             }
-            else if ((_currState == ElevatorStateType.SearchFloorUpSlow ||
-                    _currState == ElevatorStateType.SearchFloorUp) &&
-                    floors.Item2)
+            else if (_currState == ElevatorStateType.SearchFloorUpSlow ||
+                    _currState == ElevatorStateType.SearchFloorUp)
             {
                 _currState = ElevatorStateType.ChangeSearchingDirection;
             }
         }
 
-        if (_elevator.SensorsInited && _elevator.DriveDirection !=
-                ElevatorDriveDirection.STOP)
+        if (_floorSensor.SensorDataFloor.floorId > 1 &&
+                _currState != ElevatorStateType.Idle)
         {
             print("some floor reached");
             _currState = ElevatorStateType.Idle;
+            _isApproaching = false;
             MoveToFloor(_targetFloor);
         }
     }
@@ -176,30 +190,37 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     {
         print($"<color=#F00000>Door operation routine...</color>");
         _currState = ElevatorStateType.DoorOpening;
-        yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
+        yield return new WaitForSeconds(2);
         _currState = ElevatorStateType.WaitingForPeople;
         yield return new WaitForSeconds(_peopleWaitDuration);
         _currState = ElevatorStateType.DoorClosing;
-        yield return new WaitForSeconds(_elevator.ElevatorDoors.AnimationDuration);
+        yield return new WaitForSeconds(2);
         _currState = ElevatorStateType.Idle;
     }
 
-    private void OnApproachFloorDetect(float approachFloor)
+    private void OnApproachFloorDetect(FloorSensor.SensorData sensorData)
     {
         // Elevator inited?
-        if (approachFloor == _targetFloor)
+        if (sensorData.floorId == _targetFloor)
         {
-            _elevator.IsApproaching = true;
-            _elevator.ElevatorEngine.Acceleration = ElevatorAcceleration.MIN;
-            switch (_elevator.DriveDirection)
+            _isApproaching = true;
+            switch (_currState)
             {
-                case ElevatorDriveDirection.UP:
+                case ElevatorStateType.MovingDownFast:
+                    print("Moving down slow");
+                    _currState = ElevatorStateType.MovingDownSlow;
+                    break;
+                case ElevatorStateType.MovingDownSlow:
+                    print("Moving down slow");
+                    _currState = ElevatorStateType.MovingDownSlow;
+                    break;
+                case ElevatorStateType.MovingUpFast:
                     print("Moving up slow");
                     _currState = ElevatorStateType.MovingUpSlow;
                     break;
-                case ElevatorDriveDirection.DOWN:
+                case ElevatorStateType.MovingUpSlow:
                     print("Moving down slow");
-                    _currState = ElevatorStateType.MovingDownSlow;
+                    _currState = ElevatorStateType.MovingUpSlow;
                     break;
                 default:
                     print("Unknown direction");
@@ -207,7 +228,22 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
                     break;
             }
         }
-        print($"OnApproachFloorDetect! {_elevator.DriveDirection} ->" +
-                $" {_currState}");
+        print($"OnApproachFloorDetect! -> {_currState.ToString()}");
+    }
+
+    [Serializable]
+    private struct DoorPositionSensorPack
+    {
+        public DoorPositionSensor _sensorClosedLeft;
+        public DoorPositionSensor _sensorOpenedLeft;
+        public DoorPositionSensor _sensorClosedRight;
+        public DoorPositionSensor _sensorOpenedRight;
+    }
+
+    [Serializable]
+    private struct ObstacleSensorPack
+    {
+        public ObstacleSensor _sensorLeftDoor;
+        public ObstacleSensor _sensorRightDoor;
     }
 }

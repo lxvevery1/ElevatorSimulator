@@ -3,7 +3,7 @@ using UnityEngine;
 public class ElevatorState : MonoBehaviour, IStateComponent
 {
     [SerializeField]
-    protected SensorableElevator elevator;
+    protected Elevator elevator;
 
 
     private void Awake()
@@ -36,8 +36,8 @@ public class ElevatorState : MonoBehaviour, IStateComponent
 
     private bool InitElevatorComponent()
     {
-        elevator ??= GetComponentInParent<SensorableElevator>() ??
-            GetComponentInChildren<SensorableElevator>();
+        elevator ??= GetComponentInParent<Elevator>() ??
+            GetComponentInChildren<Elevator>();
 
         return elevator;
     }
