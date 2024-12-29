@@ -21,8 +21,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private const float _obstacleAlarmDuration = 5.0f;
     private int _targetFloor = 0;
     private int _currFloor = 0;
-    private bool _doorsOpenedAfterGetTarget = false;
-    private bool _obstacleAlarmed = false;
+    private bool _handleObstacleAlarming = false;
     private bool _isApproaching => _targetFloor ==
         _floorSensor.SensorDataApproach.floorId;
     private bool _sensorsInited => _currFloor > 0;
@@ -42,6 +41,8 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private bool _isDoorState => _currState == ElevatorStateType.DoorOpening ||
         _currState == ElevatorStateType.DoorClosing ||
         _currState == ElevatorStateType.WaitingForPeople;
+    private bool _isObstacleDetected => _obstacleSensors._sensorLeftDoor.ObstacleAlarm
+        || _obstacleSensors._sensorRightDoor.ObstacleAlarm;
 
 
     private void Start()
@@ -61,12 +62,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         // target floor is near
         ApproachingLogic();
 
-        if (_currState == ElevatorStateType.Idle &&
-                _targetFloor == _currFloor &&
-                !_doorsOpenedAfterGetTarget)
-        {
-            StartCoroutine(DoorOperationRoutine());
-        }
+        HandleObstacle();
     }
 
     private void LateUpdate()
@@ -96,11 +92,13 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
     private void StartMoveToFloor(Func<bool> someFunc, int i)
     {
-        if ((!_isDoorState || _currState == ElevatorStateType.Idle) &&
-                someFunc())
+        if (someFunc())
         {
-            _targetFloor = i + 1;
-            MoveToFloor(_targetFloor);
+            if (!_isDoorState || _currState == ElevatorStateType.Idle)
+            {
+                _targetFloor = i + 1;
+                MoveToFloor(_targetFloor);
+            }
         }
     }
 
@@ -115,45 +113,51 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
             return;
 
 
-        var targetDirection = floorId > _currFloor ?
-            ElevatorDriveDirection.UP :
-            ElevatorDriveDirection.DOWN;
+        ElevatorDriveDirection targetDirection;
+
+        if (floorId > _currFloor)
+            targetDirection = ElevatorDriveDirection.UP;
+        else if (floorId < _currFloor)
+            targetDirection = ElevatorDriveDirection.DOWN;
+        else
+            targetDirection = ElevatorDriveDirection.STOP;
 
 
         if (_floorSensor.SensorDataApproach.floorId !=
                 _currFloor)
         {
-            _currState = (targetDirection == ElevatorDriveDirection.DOWN) ?
-                ElevatorStateType.MovingDownFast :
-                ElevatorStateType.MovingUpFast;
+            if (targetDirection == ElevatorDriveDirection.DOWN)
+                _currState = ElevatorStateType.MovingDownFast;
+            else if (targetDirection == ElevatorDriveDirection.UP)
+                _currState = ElevatorStateType.MovingUpFast;
+            else
+                _currState = ElevatorStateType.Idle;
         }
         else
         {
-            _currState = (targetDirection == ElevatorDriveDirection.DOWN) ?
-                ElevatorStateType.MovingDownSlow :
-                ElevatorStateType.MovingUpSlow;
+            if (targetDirection == ElevatorDriveDirection.DOWN)
+                _currState = ElevatorStateType.MovingDownSlow;
+            else if (targetDirection == ElevatorDriveDirection.UP)
+                _currState = ElevatorStateType.MovingUpSlow;
+            else
+                _currState = ElevatorStateType.Idle;
         }
+
         // we already here
         if (floorId == _currFloor)
         {
             targetDirection = ElevatorDriveDirection.STOP;
-            _currState = ElevatorStateType.Idle;
+            StartCoroutine(DoorOperationRoutine());
         }
 
     }
 
-    private void OnGetObstacleAlarm()
+    private void HandleObstacle()
     {
-        print("We got obstacle alarm!");
-        if ((_obstacleSensors._sensorLeftDoor.ObstacleAlarm ||
-                    _obstacleSensors._sensorRightDoor.ObstacleAlarm) &&
-                !_obstacleAlarmed)
+        if (_isObstacleDetected && _isDoorState && !_handleObstacleAlarming)
         {
-            _obstacleAlarmed = true;
             StartCoroutine(ObstacleHandleCoroutine());
         }
-        else
-            print("Nvm, it's fine already!");
     }
 
     private void OnGetTargetFloor()
@@ -222,35 +226,31 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
     private IEnumerator ObstacleHandleCoroutine()
     {
+        _handleObstacleAlarming = true;
+
         _currState = ElevatorStateType.ObstacleSensorAlarm;
-        yield return new WaitForSeconds(0.1f); // DEBUG
+        yield return new WaitForSeconds(0.1f); // To apply prev state
         _currState = ElevatorStateType.DoorOpening;
-        yield return new WaitUntil(() => _doorSensors._sensorOpenedLeft.IsActive &&
-                _doorSensors._sensorOpenedLeft.IsActive);
-        yield return new WaitForSeconds(_obstacleAlarmDuration);
+        yield return new WaitUntil(() => _isDoorOpened);
+        yield return new WaitUntil(() => !_isObstacleDetected);
+        _handleObstacleAlarming = false;
         _currState = ElevatorStateType.DoorClosing;
-        yield return new WaitUntil(() => _doorSensors._sensorClosedLeft.IsActive &&
-                _doorSensors._sensorClosedRight.IsActive);
+        yield return new WaitUntil(() => _isDoorClosed);
         _currState = ElevatorStateType.Idle;
 
-        _obstacleAlarmed = false;
     }
 
     private IEnumerator DoorOperationRoutine()
     {
-        _doorsOpenedAfterGetTarget = true;
-
         print($"<color=#F00000>Door operation routine...</color>");
         yield return new WaitForSeconds(1.0f);
         _currState = ElevatorStateType.DoorOpening;
-        yield return new WaitForSeconds(2);
+        yield return new WaitUntil(() => _isDoorOpened);
         _currState = ElevatorStateType.WaitingForPeople;
         yield return new WaitForSeconds(_peopleWaitDuration);
         _currState = ElevatorStateType.DoorClosing;
-        yield return new WaitForSeconds(2);
+        yield return new WaitUntil(() => _isDoorClosed);
         _currState = ElevatorStateType.Idle;
-
-        _doorsOpenedAfterGetTarget = false;
     }
 
     [Serializable]
