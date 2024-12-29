@@ -22,7 +22,8 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private int _targetFloor = 0;
     private int _currFloor = 0;
     private bool _obstacleAlarmed = false;
-    private bool _isApproaching = false;
+    private bool _isApproaching => _targetFloor ==
+        _floorSensor.SensorDataApproach.floorId;
     private bool _sensorsInited => _currFloor > 1;
     private bool _isMovingDown => _currState == ElevatorStateType.MovingDownSlow ||
         _currState == ElevatorStateType.MovingDownFast;
@@ -35,14 +36,6 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         _currState == ElevatorStateType.SearchFloorUpSlow;
 
 
-    private void Awake()
-    {
-        // _floorSensor.OnApproachFloorDetectAction += OnApproachFloorDetect;
-        // _floorSensor.OnFloorDetectAction += OnFloorDetect;
-        // _floorSensor.OnGetTargetFloor += OnGetTargetFloor;
-        // _elevator.ElevatorDoors.OnGetObstacleAlarm += OnGetObstacleAlarm;
-    }
-
     private void Start()
     {
         _currState = ElevatorStateType.Initial;
@@ -50,53 +43,49 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
     private void Update()
     {
-        // Put this if you want strange initialization
-        if (_floorSensor.SensorDataFloor.floorId > 1 &&
-                _floorSensor.SensorDataFloor.isLimit)
-        {
-            if (_isSearching)
-            {
-                _currState = ElevatorStateType.ChangeSearchingDirection;
-            }
-        }
-        // You found an floor! Congrats!
-        if (_isSearching && _sensorsInited)
-        {
-            _currState = ElevatorStateType.Idle;
-        }
-
         _currFloor = _floorSensor.SensorDataFloor.floorId;
-
+        // Put this if you want strange initialization
+        StrangeInitLogic();
+        // You found an floor! Congrats!
+        SearchingEndLogic();
         // we already at target floor
-        if (_targetFloor == _currFloor && _isMoving)
-        {
-            _currState = ElevatorStateType.Idle;
-        }
+        TargetFloorLogic();
+        ApproachingLogic();
     }
 
     private void LateUpdate()
     {
+        // Init floor search
+        StartSearch(() => Input.GetKeyDown(KeyCode.Space));
+
+        // Check for number key presses (0-9) and
+        // Move to target floor
+        for (int i = 0; i <= 9; i++)
+        {
+            StartMoveToFloor(() => Input.GetKey(KeyCode.Alpha0 + i), i);
+        }
+    }
+
+    private void StartSearch(Func<bool> someFunc)
+    {
         if (_currState == ElevatorStateType.Initial &&
-                Input.GetKeyDown(KeyCode.Space))
+                someFunc())
         {
             if (_initDriveDirection == ElevatorDriveDirection.DOWN)
                 _currState = ElevatorStateType.SearchFloorDownSlow;
             else if (_initDriveDirection == ElevatorDriveDirection.UP)
                 _currState = ElevatorStateType.SearchFloorUpSlow;
         }
+    }
 
-        // Check for number key presses (0-9)
-        for (int i = 0; i <= 9; i++)
+    private void StartMoveToFloor(Func<bool> someFunc, int i)
+    {
+        if (_currState == ElevatorStateType.Idle &&
+                someFunc())
         {
-            if (_currState == ElevatorStateType.Idle &&
-                    Input.GetKey(KeyCode.Alpha0 + i))
-            {
-                _targetFloor = i + 1;
-                MoveToFloor(_targetFloor);
-                break; // Exit the loop after handling the key press
-            }
+            _targetFloor = i + 1;
+            MoveToFloor(_targetFloor);
         }
-
     }
 
     /// <summary>
@@ -178,27 +167,6 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         _obstacleAlarmed = false;
     }
 
-    private void OnFloorDetect(FloorSensor.SensorData floorSensorData)
-    {
-        // Put this if you want strange initialization
-        if (_floorSensor.SensorDataFloor.floorId > 1 && floorSensorData.isLimit)
-        {
-            if (_isSearching)
-            {
-                _currState = ElevatorStateType.ChangeSearchingDirection;
-            }
-        }
-
-        if (_floorSensor.SensorDataFloor.floorId > 1 &&
-                _currState != ElevatorStateType.Idle)
-        {
-            print("some floor reached");
-            _currState = ElevatorStateType.Idle;
-            _isApproaching = false;
-            MoveToFloor(_targetFloor);
-        }
-    }
-
     private IEnumerator DoorOperationRoutine()
     {
         print($"<color=#F00000>Door operation routine...</color>");
@@ -211,37 +179,57 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         _currState = ElevatorStateType.Idle;
     }
 
-    private void OnApproachFloorDetect(FloorSensor.SensorData sensorData)
+    private void StrangeInitLogic()
     {
-        // Elevator inited?
-        if (sensorData.floorId == _targetFloor)
+        if (_floorSensor.SensorDataFloor.floorId > 1 &&
+                _floorSensor.SensorDataFloor.isLimit)
         {
-            _isApproaching = true;
-            switch (_currState)
+            if (_isSearching)
             {
-                case ElevatorStateType.MovingDownFast:
-                    print("Moving down slow");
-                    _currState = ElevatorStateType.MovingDownSlow;
-                    break;
-                case ElevatorStateType.MovingDownSlow:
-                    print("Moving down slow");
-                    _currState = ElevatorStateType.MovingDownSlow;
-                    break;
-                case ElevatorStateType.MovingUpFast:
-                    print("Moving up slow");
-                    _currState = ElevatorStateType.MovingUpSlow;
-                    break;
-                case ElevatorStateType.MovingUpSlow:
-                    print("Moving down slow");
-                    _currState = ElevatorStateType.MovingUpSlow;
-                    break;
-                default:
-                    print("Unknown direction");
-                    _currState = ElevatorStateType.Idle;
-                    break;
+                _currState = ElevatorStateType.ChangeSearchingDirection;
             }
         }
-        print($"OnApproachFloorDetect! -> {_currState.ToString()}");
+    }
+    private void SearchingEndLogic()
+    {
+        if (_isSearching && _sensorsInited)
+        {
+            _currState = ElevatorStateType.Idle;
+        }
+    }
+
+    private void TargetFloorLogic()
+    {
+        if (_targetFloor == _currFloor && _isMoving)
+        {
+            _currState = ElevatorStateType.Idle;
+        }
+    }
+
+    private void ApproachingLogic()
+    {
+        if (_isApproaching)
+        {
+            if (_isMovingDown)
+            {
+                _currState = ElevatorStateType.MovingDownSlow;
+            }
+            else if (_isMovingUp)
+            {
+                _currState = ElevatorStateType.MovingUpSlow;
+            }
+        }
+        else
+        {
+            if (_isMovingDown)
+            {
+                _currState = ElevatorStateType.MovingDownFast;
+            }
+            else if (_isMovingUp)
+            {
+                _currState = ElevatorStateType.MovingUpFast;
+            }
+        }
     }
 
     [Serializable]
