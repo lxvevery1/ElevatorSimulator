@@ -1,45 +1,46 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
 public class DoorPositionSensor : MonoBehaviour
 {
+    public bool IsActive => _isDoorDetected;
+
+
     [SerializeField]
-    public bool IsActive;
-    private const string _doorTag = "Door";
-    private Collider _collider;
-    private const bool _isTrigger = true;
-    private bool _isActive = true;
-    private bool ActivationCondition(Collider other) => !other.isTrigger &&
-        other.tag.Equals(_doorTag);
+    private Vector3 _rayDirection = Vector3.forward;
+    [SerializeField]
+    private float _rayLength = 5f;
+    private string _doorTag = "Door"; // Tag to check for
 
-    private void Awake()
+    private bool _isDoorDetected = false;
+
+    private void Update()
     {
-        _collider = GetComponent<Collider>();
-        _collider.isTrigger = _isTrigger;
+        _isDoorDetected = CheckForDoor();
     }
 
-
-    private void OnTriggerEnter(Collider other)
+    private bool CheckForDoor()
     {
-        if (ActivationCondition(other))
+        // Create a ray from the object's position in the specified direction
+        Ray ray = new Ray(transform.position,
+                transform.TransformDirection(_rayDirection));
+
+        // Perform the raycast
+        if (Physics.Raycast(ray, out RaycastHit hit, _rayLength))
         {
-            _isActive = true;
+            if (hit.collider.CompareTag(_doorTag))
+            {
+                return true;
+            }
         }
+
+        return false;
     }
 
-    private void OnTriggerStay(Collider other)
+    private void OnDrawGizmos()
     {
-        if (ActivationCondition(other))
-        {
-            _isActive = true;
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (ActivationCondition(other))
-        {
-            _isActive = false;
-        }
+        // Draw the ray in the Scene view for debugging
+        Gizmos.color = _isDoorDetected ? Color.green : Color.red;
+        Gizmos.DrawRay(transform.position,
+                transform.TransformDirection(_rayDirection) * _rayLength);
     }
 }

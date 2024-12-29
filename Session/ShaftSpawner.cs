@@ -9,7 +9,7 @@ public class ElevatorShaftContructor : MonoBehaviour
     private SpawnSet _spawnSetItems;
     private float _floorGap = 20f;
     private float _approachGap = 9.5f;
-    private float _limitGap = 40f;
+    private float _limitGap = 30f;
     [SerializeField]
     private int _floorSpawnCount = 5;
     private const float _distanceBtwnFloors = 20f;

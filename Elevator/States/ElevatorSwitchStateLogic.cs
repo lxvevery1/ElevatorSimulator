@@ -21,19 +21,27 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private const float _obstacleAlarmDuration = 5.0f;
     private int _targetFloor = 0;
     private int _currFloor = 0;
+    private bool _doorsOpenedAfterGetTarget = false;
     private bool _obstacleAlarmed = false;
     private bool _isApproaching => _targetFloor ==
         _floorSensor.SensorDataApproach.floorId;
     private bool _sensorsInited => _currFloor > 0;
-    private bool _isMovingDown => _currState == ElevatorStateType.MovingDownSlow ||
+    private bool _isMovingDownState => _currState == ElevatorStateType.MovingDownSlow ||
         _currState == ElevatorStateType.MovingDownFast;
-    private bool _isMovingUp => _currState == ElevatorStateType.MovingUpSlow ||
+    private bool _isMovingUpState => _currState == ElevatorStateType.MovingUpSlow ||
         _currState == ElevatorStateType.MovingUpFast;
-    private bool _isMoving => _isMovingUp || _isMovingDown;
-    private bool _isSearching => _currState == ElevatorStateType.SearchFloorUp ||
+    private bool _isMovingState => _isMovingUpState || _isMovingDownState;
+    private bool _isSearchingState => _currState == ElevatorStateType.SearchFloorUp ||
         _currState == ElevatorStateType.SearchFloorDown ||
         _currState == ElevatorStateType.SearchFloorDownSlow ||
         _currState == ElevatorStateType.SearchFloorUpSlow;
+    private bool _isDoorOpened => _doorSensors._sensorOpenedLeft.IsActive &&
+        _doorSensors._sensorOpenedRight.IsActive;
+    private bool _isDoorClosed => _doorSensors._sensorClosedLeft.IsActive &&
+        _doorSensors._sensorClosedRight.IsActive;
+    private bool _isDoorState => _currState == ElevatorStateType.DoorOpening ||
+        _currState == ElevatorStateType.DoorClosing ||
+        _currState == ElevatorStateType.WaitingForPeople;
 
 
     private void Start()
@@ -45,13 +53,20 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     {
         _currFloor = _floorSensor.SensorDataFloor.floorId;
         // Put this if you want strange initialization
-        StrangeInitLogic();
+        ChangeDirectionOnInitLogic();
         // You found an floor! Congrats!
         SearchingEndLogic();
         // we already at target floor
         TargetFloorLogic();
         // target floor is near
         ApproachingLogic();
+
+        if (_currState == ElevatorStateType.Idle &&
+                _targetFloor == _currFloor &&
+                !_doorsOpenedAfterGetTarget)
+        {
+            StartCoroutine(DoorOperationRoutine());
+        }
     }
 
     private void LateUpdate()
@@ -81,7 +96,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
     private void StartMoveToFloor(Func<bool> someFunc, int i)
     {
-        if (_currState == ElevatorStateType.Idle &&
+        if ((!_isDoorState || _currState == ElevatorStateType.Idle) &&
                 someFunc())
         {
             _targetFloor = i + 1;
@@ -93,7 +108,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     /// Move elevator to target floor
     /// <param name="floorId"> id of floor: 1, 2, 3, 4, ...
     /// </summary>
-    protected void MoveToFloor(int floorId)
+    private void MoveToFloor(int floorId)
     {
         print($"<color=#FFF000>Move to floor {floorId}...</color>");
         if (floorId <= 0)
@@ -108,14 +123,12 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         if (_floorSensor.SensorDataApproach.floorId !=
                 _currFloor)
         {
-            print("<color=#00FF00>Approach == Floor sensor");
             _currState = (targetDirection == ElevatorDriveDirection.DOWN) ?
                 ElevatorStateType.MovingDownFast :
                 ElevatorStateType.MovingUpFast;
         }
         else
         {
-            print("<color=#F00000>Approach != Floor sensor");
             _currState = (targetDirection == ElevatorDriveDirection.DOWN) ?
                 ElevatorStateType.MovingDownSlow :
                 ElevatorStateType.MovingUpSlow;
@@ -128,7 +141,6 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         }
 
     }
-
 
     private void OnGetObstacleAlarm()
     {
@@ -152,6 +164,62 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
             StartCoroutine(DoorOperationRoutine());
     }
 
+
+    private void ChangeDirectionOnInitLogic()
+    {
+        if (_floorSensor.SensorDataFloor.floorId > 1 &&
+                _floorSensor.SensorDataFloor.isLimit)
+        {
+            if (_isSearchingState)
+            {
+                _currState = ElevatorStateType.ChangeSearchingDirection;
+            }
+        }
+    }
+
+    private void SearchingEndLogic()
+    {
+        if (_isSearchingState && _sensorsInited)
+        {
+            _currState = ElevatorStateType.Idle;
+        }
+    }
+
+    private void TargetFloorLogic()
+    {
+        if (_targetFloor == _currFloor && _isMovingState)
+        {
+            _currState = ElevatorStateType.Idle;
+            StartCoroutine(DoorOperationRoutine());
+        }
+    }
+
+    private void ApproachingLogic()
+    {
+        if (_isApproaching)
+        {
+            if (_isMovingDownState)
+            {
+                _currState = ElevatorStateType.MovingDownSlow;
+            }
+            else if (_isMovingUpState)
+            {
+                _currState = ElevatorStateType.MovingUpSlow;
+            }
+        }
+        else
+        {
+            if (_isMovingDownState)
+            {
+                _currState = ElevatorStateType.MovingDownFast;
+            }
+            else if (_isMovingUpState)
+            {
+                _currState = ElevatorStateType.MovingUpFast;
+            }
+        }
+    }
+
     private IEnumerator ObstacleHandleCoroutine()
     {
         _currState = ElevatorStateType.ObstacleSensorAlarm;
@@ -170,7 +238,10 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
     private IEnumerator DoorOperationRoutine()
     {
+        _doorsOpenedAfterGetTarget = true;
+
         print($"<color=#F00000>Door operation routine...</color>");
+        yield return new WaitForSeconds(1.0f);
         _currState = ElevatorStateType.DoorOpening;
         yield return new WaitForSeconds(2);
         _currState = ElevatorStateType.WaitingForPeople;
@@ -178,59 +249,8 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         _currState = ElevatorStateType.DoorClosing;
         yield return new WaitForSeconds(2);
         _currState = ElevatorStateType.Idle;
-    }
 
-    private void StrangeInitLogic()
-    {
-        if (_floorSensor.SensorDataFloor.floorId > 1 &&
-                _floorSensor.SensorDataFloor.isLimit)
-        {
-            if (_isSearching)
-            {
-                _currState = ElevatorStateType.ChangeSearchingDirection;
-            }
-        }
-    }
-    private void SearchingEndLogic()
-    {
-        if (_isSearching && _sensorsInited)
-        {
-            _currState = ElevatorStateType.Idle;
-        }
-    }
-
-    private void TargetFloorLogic()
-    {
-        if (_targetFloor == _currFloor && _isMoving)
-        {
-            _currState = ElevatorStateType.Idle;
-        }
-    }
-
-    private void ApproachingLogic()
-    {
-        if (_isApproaching)
-        {
-            if (_isMovingDown)
-            {
-                _currState = ElevatorStateType.MovingDownSlow;
-            }
-            else if (_isMovingUp)
-            {
-                _currState = ElevatorStateType.MovingUpSlow;
-            }
-        }
-        else
-        {
-            if (_isMovingDown)
-            {
-                _currState = ElevatorStateType.MovingDownFast;
-            }
-            else if (_isMovingUp)
-            {
-                _currState = ElevatorStateType.MovingUpFast;
-            }
-        }
+        _doorsOpenedAfterGetTarget = false;
     }
 
     [Serializable]
