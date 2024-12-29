@@ -24,7 +24,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private bool _obstacleAlarmed = false;
     private bool _isApproaching => _targetFloor ==
         _floorSensor.SensorDataApproach.floorId;
-    private bool _sensorsInited => _currFloor > 1;
+    private bool _sensorsInited => _currFloor > 0;
     private bool _isMovingDown => _currState == ElevatorStateType.MovingDownSlow ||
         _currState == ElevatorStateType.MovingDownFast;
     private bool _isMovingUp => _currState == ElevatorStateType.MovingUpSlow ||
