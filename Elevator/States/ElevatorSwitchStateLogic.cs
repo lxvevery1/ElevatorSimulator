@@ -50,6 +50,7 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         SearchingEndLogic();
         // we already at target floor
         TargetFloorLogic();
+        // target floor is near
         ApproachingLogic();
     }
 

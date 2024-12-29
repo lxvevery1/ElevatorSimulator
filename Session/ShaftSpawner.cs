@@ -9,6 +9,7 @@ public class ElevatorShaftContructor : MonoBehaviour
     private SpawnSet _spawnSetItems;
     private float _floorGap = 20f;
     private float _approachGap = 9.5f;
+    private float _limitGap = 40f;
     [SerializeField]
     private int _floorSpawnCount = 5;
     private const float _distanceBtwnFloors = 20f;
@@ -41,24 +42,48 @@ public class ElevatorShaftContructor : MonoBehaviour
         var approachPos1 = new Vector3(position.x, position.y - _approachGap, position.z);
         var approachPos2 = new Vector3(position.x, position.y + _approachGap, position.z);
 
-        var floorInstance = Instantiate(spawnSet.Floor, position, rotation);
-        floorInstance.name = $"Floor_{id}_{floorType}";
-        SetFloorProperties(floorInstance, parentObject.transform, id, floorType);
 
         switch (floorType)
         {
             case FloorType.BOT_LIMIT:
-                SpawnApproachFloor(spawnSet, approachPos2, rotation, id, floorType,
-                        "Bot", parentObject.transform);
+                var floorInstance = Instantiate(spawnSet.Floor,
+                        new Vector3(position.x,
+                            position.y - _limitGap,
+                            position.z),
+                        rotation);
+                floorInstance.name = $"Floor_{id}_{floorType}";
+                SetFloorProperties(floorInstance, parentObject.transform, id, floorType);
+
+                SpawnApproachFloor(spawnSet, new Vector3(approachPos2.x,
+                            approachPos2.y - _limitGap,
+                            approachPos2.z),
+                        rotation, id, floorType, "Bot", parentObject.transform);
                 break;
             case FloorType.MID:
+                var floorInstanceMid = Instantiate(spawnSet.Floor, position, rotation);
+                floorInstanceMid.name = $"Floor_{id}_{floorType}";
+                SetFloorProperties(floorInstanceMid, parentObject.transform, id,
+                        floorType);
+
                 SpawnApproachFloor(spawnSet, approachPos1, rotation, id, floorType,
                         "Mid_1", parentObject.transform);
                 SpawnApproachFloor(spawnSet, approachPos2, rotation, id, floorType,
                         "Mid_2", parentObject.transform);
                 break;
             case FloorType.TOP_LIMIT:
-                SpawnApproachFloor(spawnSet, approachPos1, rotation, id, floorType,
+                var floorInstanceTop = Instantiate(spawnSet.Floor,
+                        new Vector3(position.x,
+                            position.y + _limitGap,
+                            position.z),
+                        rotation);
+                floorInstanceTop.name = $"Floor_{id}_{floorType}";
+                SetFloorProperties(floorInstanceTop, parentObject.transform, id,
+                        floorType);
+
+                SpawnApproachFloor(spawnSet, new Vector3(approachPos1.x,
+                            approachPos1.y + _limitGap,
+                            approachPos1.z),
+                        rotation, id, floorType,
                         "Top", parentObject.transform);
                 break;
         }
