@@ -24,12 +24,21 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
     private bool _obstacleAlarmed = false;
     private bool _isApproaching = false;
     private bool _sensorsInited => _currFloor > 1;
+    private bool _isMovingDown => _currState == ElevatorStateType.MovingDownSlow ||
+        _currState == ElevatorStateType.MovingDownFast;
+    private bool _isMovingUp => _currState == ElevatorStateType.MovingUpSlow ||
+        _currState == ElevatorStateType.MovingUpFast;
+    private bool _isMoving => _isMovingUp || _isMovingDown;
+    private bool _isSearching => _currState == ElevatorStateType.SearchFloorUp ||
+        _currState == ElevatorStateType.SearchFloorDown ||
+        _currState == ElevatorStateType.SearchFloorDownSlow ||
+        _currState == ElevatorStateType.SearchFloorUpSlow;
 
 
     private void Awake()
     {
-        _floorSensor.OnApproachFloorDetectAction += OnApproachFloorDetect;
-        _floorSensor.OnFloorDetectAction += OnFloorDetect;
+        // _floorSensor.OnApproachFloorDetectAction += OnApproachFloorDetect;
+        // _floorSensor.OnFloorDetectAction += OnFloorDetect;
         // _floorSensor.OnGetTargetFloor += OnGetTargetFloor;
         // _elevator.ElevatorDoors.OnGetObstacleAlarm += OnGetObstacleAlarm;
     }
@@ -41,7 +50,28 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
     private void Update()
     {
+        // Put this if you want strange initialization
+        if (_floorSensor.SensorDataFloor.floorId > 1 &&
+                _floorSensor.SensorDataFloor.isLimit)
+        {
+            if (_isSearching)
+            {
+                _currState = ElevatorStateType.ChangeSearchingDirection;
+            }
+        }
+        // You found an floor! Congrats!
+        if (_isSearching && _sensorsInited)
+        {
+            _currState = ElevatorStateType.Idle;
+        }
 
+        _currFloor = _floorSensor.SensorDataFloor.floorId;
+
+        // we already at target floor
+        if (_targetFloor == _currFloor && _isMoving)
+        {
+            _currState = ElevatorStateType.Idle;
+        }
     }
 
     private void LateUpdate()
@@ -67,15 +97,6 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
             }
         }
 
-        // we already here
-        if ((_currState == ElevatorStateType.MovingUpSlow ||
-                    _currState == ElevatorStateType.MovingUpFast ||
-                    _currState == ElevatorStateType.MovingDownFast ||
-                    _currState == ElevatorStateType.MovingDownSlow) &&
-                _targetFloor == _currFloor)
-        {
-            _currState = ElevatorStateType.Idle;
-        }
     }
 
     /// <summary>
@@ -159,18 +180,10 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
 
     private void OnFloorDetect(FloorSensor.SensorData floorSensorData)
     {
-        _currFloor = floorSensorData.floorId;
-
         // Put this if you want strange initialization
         if (_floorSensor.SensorDataFloor.floorId > 1 && floorSensorData.isLimit)
         {
-            if (_currState == ElevatorStateType.SearchFloorDownSlow ||
-                    _currState == ElevatorStateType.SearchFloorDown)
-            {
-                _currState = ElevatorStateType.ChangeSearchingDirection;
-            }
-            else if (_currState == ElevatorStateType.SearchFloorUpSlow ||
-                    _currState == ElevatorStateType.SearchFloorUp)
+            if (_isSearching)
             {
                 _currState = ElevatorStateType.ChangeSearchingDirection;
             }
