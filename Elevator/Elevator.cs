@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -14,14 +13,21 @@ public class Elevator : MonoBehaviour
     public ElevatorDriveDirection DriveDirection = ElevatorDriveDirection.STOP;
     public ElevatorEngine ElevatorEngine { get => _elevatorEngine; }
 
-
     [SerializeField]
     private Rigidbody _rb;
 
     [SerializeField]
     protected ElevatorDoors _elevatorDoors;
     protected ElevatorEngine _elevatorEngine;
+
+    [SerializeField]
+    private float _smoothingTime = 0.5f; // Time to smoothly change direction
+
+    private Vector3 _targetVelocity = Vector3.zero;
+    private Vector3 _currentVelocity = Vector3.zero;
+
     private Vector3 _driveDirectionVector => DirEnumToVector(DriveDirection);
+
 
     private static Vector3 DirEnumToVector(ElevatorDriveDirection dirEnum) =>
         dirEnum switch
@@ -32,14 +38,12 @@ public class Elevator : MonoBehaviour
             _ => Vector3.zero
         };
 
-
     protected virtual bool Init()
     {
         bool inited = false;
 
         _rb ??= GetComponent<Rigidbody>();
         _elevatorEngine ??= GetComponent<ElevatorEngine>();
-
 
         inited = _elevatorEngine && _rb;
         return inited;
@@ -52,15 +56,29 @@ public class Elevator : MonoBehaviour
 
     protected virtual void FixedUpdate()
     {
-        MoveBody(DriveDirection);
+        UpdateTargetVelocity();
+        SmoothVelocity();
+        MoveBody();
     }
 
-    protected void MoveBody(ElevatorDriveDirection dir)
+    private void UpdateTargetVelocity()
+    {
+        _targetVelocity = _driveDirectionVector * _elevatorEngine.Speed;
+    }
+
+    private void SmoothVelocity()
+    {
+        // Smoothly interpolate between the current velocity and the target velocity
+        _currentVelocity = Vector3.Lerp(_currentVelocity, _targetVelocity,
+                Time.fixedDeltaTime / _smoothingTime);
+    }
+
+    protected void MoveBody()
     {
         if (!_rb)
             Init();
 
-        _rb.linearVelocity = DirEnumToVector(dir) * _elevatorEngine.Speed * Time.fixedDeltaTime;
+        _rb.linearVelocity = _currentVelocity;
     }
 
     /// <summary>
@@ -74,12 +92,5 @@ public class Elevator : MonoBehaviour
         DriveDirection = (DriveDirection == ElevatorDriveDirection.UP) ?
             ElevatorDriveDirection.DOWN :
             ElevatorDriveDirection.UP;
-    }
-
-
-    [DrawGizmo(GizmoType.Selected | GizmoType.Active)]
-    private void DrawDirectionVectorGizmo(Elevator elevator, GizmoType gizmoType)
-    {
-        Gizmos.DrawLine(elevator.transform.position, _driveDirectionVector);
     }
 }
