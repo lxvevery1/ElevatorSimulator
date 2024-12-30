@@ -1,5 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 /// <summary> Returns Elevator's state at current moment </summary>
@@ -43,10 +46,23 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         _currState == ElevatorStateType.WaitingForPeople;
     private bool _isObstacleDetected => _obstacleSensors._sensorLeftDoor.ObstacleAlarm
         || _obstacleSensors._sensorRightDoor.ObstacleAlarm;
+    private List<FloorFloorSensor> _floorFloorSensors = new();
+    private List<bool> _floorFloorSensorsIsActive = new();
 
+
+    private void Awake()
+    {
+        _floorFloorSensors = FindObjectsByType<FloorFloorSensor>
+            (FindObjectsSortMode.None).
+            OrderBy(sensor => ExtractNumberFromName(sensor.name)).
+            ToList();
+    }
 
     private void Start()
     {
+        _floorFloorSensorsIsActive = _floorFloorSensors.
+            Select(sensor => sensor.IsActive).ToList();
+
         _currState = ElevatorStateType.Initial;
     }
 
@@ -63,6 +79,10 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         ApproachingLogic();
 
         HandleObstacle();
+
+        // sync floor sensors list
+        _floorFloorSensorsIsActive = _floorFloorSensors.
+            Select(sensor => sensor.IsActive).ToList();
     }
 
     private void LateUpdate()
@@ -253,6 +273,16 @@ public class ElevatorSwitchStateLogic : MonoBehaviour
         _currState = ElevatorStateType.Idle;
     }
 
+    private int ExtractNumberFromName(string name)
+    {
+        // Use a regular expression to find the first number in the name
+        Match match = Regex.Match(name, @"\d+");
+        if (match.Success)
+        {
+            return int.Parse(match.Value); // Convert the matched number to an integer
+        }
+        return 0; // If no number is found, return 0 (or handle it as needed)
+    }
     [Serializable]
     private struct DoorPositionSensorPack
     {
